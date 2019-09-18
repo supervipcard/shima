@@ -88,6 +88,7 @@
         height: 45px
     }
     .input-group {
+        width: 100%;
         margin-bottom: 15px;
     }
     .input-group .input-group-addon {
@@ -161,7 +162,7 @@
             return false
         }
         $.ajax({
-            url: "/sendmail/",
+            url: "{% url "sendmail" %}",
             type: "POST",
             data: JSON.stringify({email: email}),
             dataType: "json",
@@ -170,20 +171,25 @@
                 xhr.setRequestHeader("X-CSRFToken", $('[name="csrfmiddlewaretoken"]').val());
             },
             success: function (result) {
-                var time = 60;
-                $("#sendmail").attr('disabled', true);
-                var timer = setInterval(() => {
-                    time--;
-                    $("#sendmail").text(time + ' 秒后可重发');
-                    if (time === 0) {
-                        clearInterval(timer);
-                        $("#sendmail").text('重新发送');
-                        $("#sendmail").attr('disabled', false);
-                    }
-                }, 1000)
+                if (result['code'] === 0) {
+                    var time = 60;
+                    $("#sendmail").attr('disabled', true);
+                    var timer = setInterval(() => {
+                        time--;
+                        $("#sendmail").text(time + ' 秒后可重发');
+                        if (time === 0) {
+                            clearInterval(timer);
+                            $("#sendmail").text('重新发送');
+                            $("#sendmail").attr('disabled', false);
+                        }
+                    }, 1000)
+                }
+                else {
+                    show_error(result["message"]);
+                }
             },
             error: function () {
-
+                show_error("服务器异常");
             }
         });
         return false

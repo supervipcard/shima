@@ -65,14 +65,14 @@
             },
             success: function (result) {
                 if (result['code'] === 0) {
-                    window.location.href = {% url "user" %};
+                    window.location.href = {% url "sign_in" %};
                 }
                 else {
                     show_error(result["message"]);
                 }
             },
             error: function() {
-
+                show_error("服务器异常");
             }
         });
         return false
