@@ -3,17 +3,20 @@ import random
 import json
 import uuid
 from datetime import datetime, timedelta
+from urllib.parse import urlparse
 
 from captcha.image import ImageCaptcha
-from django.contrib.auth import get_user_model, authenticate, login
+from django.contrib.auth import get_user_model, authenticate, login, logout
 from django.contrib.auth.backends import ModelBackend
 from django.core.mail import send_mail
 from django.db.models import Q
 from django.forms import Form, fields
 from django.http import JsonResponse, HttpResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, resolve_url
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 from django_redis import get_redis_connection
+from users.models import Wallet
 
 User = get_user_model()
 
@@ -123,6 +126,7 @@ class Register(View):
             user = User(username=username, email=email, password=password)
             user.set_password(password)
             user.save()
+            Wallet.objects.create(user=user)
             return JsonResponse({"code": 0, "message": "注册成功"})
         else:
             return JsonResponse({'code': 1001, 'message': '请求参数异常'})
@@ -130,8 +134,13 @@ class Register(View):
 
 class SignInView(View):
     def get(self, request):
+        if request.user.is_authenticated:
+            return redirect('dashboard')
+        next_page = request.GET.get('next')
+        if not next_page or urlparse(next_page).netloc != '':
+            next_page = resolve_url('dashboard')
         code_id = str(uuid.uuid1())
-        return render(request, 'sign_in.html', {"code_id": code_id})
+        return render(request, 'sign_in.html', {"code_id": code_id, 'next_page': next_page})
 
 
 class LoginForm(Form):
@@ -235,3 +244,13 @@ class ResetPassword(View):
                 return JsonResponse({'code': 5002, 'message': '邮箱未注册'})
         else:
             return JsonResponse({'code': 1001, 'message': '请求参数异常'})
+
+
+class Logout(View):
+    def post(self, request):
+        logout(request)
+        return JsonResponse({"code": 0, "message": "登出成功"})
+
+    @csrf_exempt
+    def dispatch(self, *args, **kwargs):
+        return super(Logout, self).dispatch(*args, **kwargs)

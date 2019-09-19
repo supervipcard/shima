@@ -64,7 +64,7 @@
             },
             success: function (result) {
                 if (result['code'] === 0) {
-                    window.location.href = {% url "home" %};
+                    window.location.href = "{{ next_page }}";
                 }
                 else {
                     show_error(result["message"]);

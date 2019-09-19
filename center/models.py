@@ -11,7 +11,7 @@ class Product(models.Model):
     """
     产品
     """
-    name = models.CharField(verbose_name='产品名称', max_length=10)  # 钱包、极验识别、易盾识别
+    name = models.CharField(verbose_name='产品名称', max_length=10)  # 极验识别、易盾识别
     doc_url = models.URLField(verbose_name='接口文档链接地址', null=True, blank=True)
     is_open = models.BooleanField(verbose_name='是否开放', default=True)
 
@@ -55,7 +55,7 @@ class Order(models.Model):
         (1, "待支付"),
         (2, "已完成"),
         (3, "超时未支付"),
-        (4, "已取消`"),
+        (4, "已取消"),
     )
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='用户')

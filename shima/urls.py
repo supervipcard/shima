@@ -15,11 +15,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+import xadmin
 from users.views import *
 from center.views import *
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('xadmin/', xadmin.site.urls),
 
     path('sign_in/', SignInView.as_view(), name='sign_in'),
     path('sign_up/', SignUpView.as_view(), name='sign_up'),
@@ -27,6 +28,7 @@ urlpatterns = [
     path('captcha/', CreateCaptcha.as_view(), name='captcha'),
 
     path('login/', Login.as_view(), name='login'),
+    path('logout/', Logout.as_view(), name='logout'),
     path('register/', Register.as_view(), name='register'),
 
     path('forget_password/', ForgetPasswordView.as_view(), name='forget_password'),
@@ -34,5 +36,6 @@ urlpatterns = [
     path('verify_email/', VerifyEmail.as_view(), name='verify_email'),
     path('reset_password/', ResetPassword.as_view(), name='reset_password'),
 
-    path('home/', home, name='home'),
+    path('dashboard/', Dashboard.as_view(), name='dashboard'),
+    path('service/<int:product_id>/', Service.as_view(), name='service'),
 ]
