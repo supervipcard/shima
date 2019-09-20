@@ -82,20 +82,15 @@ layui.define('view', function(exports){
         admin.req($.extend(true, {
           url: '/auth/code'
           ,type: 'get'
-          ,data: JSON.stringify({email: value})
-          ,success: function(res){
-            if (res['code'] === 0) {
-              layer.msg('验证码已发送至你的手机，请注意查收', {
-                  icon: 1
-                  , shade: 0
-              });
-              options.elemVercode.focus();
-              countDown();
-              success && success(res);
-            }
-            else {
-              layer.msg(res["message"]);
-            }
+          ,data: JSON.stringify({phone: value})
+          ,done: function(res){
+            layer.msg('验证码已发送至你的手机，请注意查收', {
+              icon: 1
+              ,shade: 0
+            });
+            options.elemVercode.focus();
+            countDown();
+            // success && success(res);
           }
         }, options.ajax));
       });

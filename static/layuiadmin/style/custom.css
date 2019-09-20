@@ -1,0 +1,5 @@
+input:disabled {
+  background-color: rgb(235, 235, 228);
+  color: rgba(0,0,0,.35);
+  cursor: not-allowed;
+}

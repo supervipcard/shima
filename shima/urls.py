@@ -24,7 +24,7 @@ urlpatterns = [
 
     path('sign_in/', SignInView.as_view(), name='sign_in'),
     path('sign_up/', SignUpView.as_view(), name='sign_up'),
-    path('sendmail/', SendEmail.as_view(), name='sendmail'),
+    path('sendsms/', SendSMS.as_view(), name='sendsms'),
     path('captcha/', CreateCaptcha.as_view(), name='captcha'),
 
     path('login/', Login.as_view(), name='login'),
@@ -33,9 +33,11 @@ urlpatterns = [
 
     path('forget_password/', ForgetPasswordView.as_view(), name='forget_password'),
     path('forget_password2/', ForgetPasswordView2.as_view(), name='forget_password2'),
-    path('verify_email/', VerifyEmail.as_view(), name='verify_email'),
+    path('verify_phone/', VerifyPhone.as_view(), name='verify_phone'),
     path('reset_password/', ResetPassword.as_view(), name='reset_password'),
+    path('change_password/', ChangePassword.as_view(), name='change_password'),
 
-    path('dashboard/', Dashboard.as_view(), name='dashboard'),
-    path('service/<int:product_id>/', Service.as_view(), name='service'),
+    path('index/', Index.as_view(), name='index'),
+    path('user_info/', UserInfo.as_view(), name='user_info'),
+    path('user_password/', UserPassword.as_view(), name='user_password'),
 ]

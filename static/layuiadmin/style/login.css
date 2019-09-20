@@ -4,14 +4,14 @@
  @Author：贤心
  @Site：http://www.layui.com/admin/
  @License：GPL-2
- 
+
  */
- 
+
 html,body,#LAY_app{height:100%;}
 .layui-layout-body{overflow: auto;}
- 
+
 #LAY-user-login,
-.layadmin-user-display-show{display: block !important;} 
+.layadmin-user-display-show{display: block !important;}
 .layadmin-user-login{position: relative; left: 0; top: 0; padding: 110px 0; min-height: 100%; box-sizing: border-box;}
 .layadmin-user-login-main{width: 375px; margin: 0 auto; box-sizing: border-box;}
 .layadmin-user-login-box{padding: 20px;}

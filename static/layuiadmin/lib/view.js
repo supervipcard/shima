@@ -111,7 +111,7 @@ layui.define(['laytpl', 'layer'], function(exports){
         }
 
         //只要 http 状态码正常，无论 response 的 code 是否正常都执行 success
-        // typeof success === 'function' && success(res);
+        typeof success === 'function' && success(res);
       }
       ,error: function(e, code){
         var error = [
@@ -120,7 +120,7 @@ layui.define(['laytpl', 'layer'], function(exports){
         ].join('');
         view.error(error);
 
-        // typeof error === 'function' && error(res);
+        typeof error === 'function' && error(res);
       }
     }, options));
   };

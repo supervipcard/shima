@@ -11,13 +11,22 @@ def global_setting(request):
     return {'product': product}
 
 
-class Dashboard(View):
+class Index(View):
     @method_decorator(login_required)
     def get(self, request):
-        return render(request, 'index.html')
+        user = request.user
+        return render(request, 'index.html', {'user': user})
 
 
-class Service(View):
-    def get(self, request, product_id):
-        print(product_id)
-        return render(request, 'service.html')
+class UserInfo(View):
+    @method_decorator(login_required)
+    def get(self, request):
+        user = request.user
+        return render(request, 'set/user/info.html', {'user': user})
+
+
+class UserPassword(View):
+    @method_decorator(login_required)
+    def get(self, request):
+        user = request.user
+        return render(request, 'set/user/password.html', {'user': user})
