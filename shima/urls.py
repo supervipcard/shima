@@ -40,4 +40,6 @@ urlpatterns = [
     path('index/', Index.as_view(), name='index'),
     path('user_info/', UserInfo.as_view(), name='user_info'),
     path('user_password/', UserPassword.as_view(), name='user_password'),
+    path('homepage/', HomePage.as_view(), name='homepage'),
+    path('operate/', Operate.as_view(), name='operate')
 ]

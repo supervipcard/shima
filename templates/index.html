@@ -54,13 +54,13 @@
       <!-- 侧边菜单 -->
       <div class="layui-side layui-side-menu">
         <div class="layui-side-scroll">
-          <div class="layui-logo" lay-href="home/console.html">
+          <div class="layui-logo" lay-href="{% url "homepage" %}">
             <span>识码</span>
           </div>
 
           <ul class="layui-nav layui-nav-tree" lay-shrink="all" id="LAY-system-side-menu" lay-filter="layadmin-system-side-menu">
             <li data-name="home" class="layui-nav-item layui-nav-itemed">
-              <a lay-href="home/console.html">
+              <a lay-href="{% url "homepage" %}">
                 <i class="layui-icon layui-icon-home"></i>
                 <cite>控制台</cite>
               </a>
@@ -73,7 +73,7 @@
               <dl class="layui-nav-child">
                 <dd data-name="grid">
                 <dd data-name="button">
-                  <a lay-href="component/button/index.html">极验识别</a>
+                  <a lay-href="{% url "operate" %}">极验识别</a>
                 </dd>
               </dl>
             </li>
@@ -110,7 +110,7 @@
         </div>
         <div class="layui-tab" lay-unauto lay-allowClose="true" lay-filter="layadmin-layout-tabs">
           <ul class="layui-tab-title" id="LAY_app_tabsheader">
-            <li lay-id="home/console.html" lay-attr="home/console.html" class="layui-this"><i class="layui-icon layui-icon-home"></i></li>
+            <li lay-id="{% url "homepage" %}" lay-attr="{% url "homepage" %}" class="layui-this"><i class="layui-icon layui-icon-home"></i></li>
           </ul>
         </div>
       </div>
@@ -119,7 +119,7 @@
       <!-- 主体内容 -->
       <div class="layui-body" id="LAY_app_body">
         <div class="layadmin-tabsbody-item layui-show">
-          <iframe src="home/console.html" frameborder="0" class="layadmin-iframe"></iframe>
+          <iframe src="{% url "homepage" %}" frameborder="0" class="layadmin-iframe"></iframe>
         </div>
       </div>
 

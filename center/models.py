@@ -61,7 +61,7 @@ class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='用户')
     order_id = models.CharField(verbose_name='订单编号', max_length=30, primary_key=True)
     transaction_type = models.SmallIntegerField(verbose_name='交易类型', choices=transaction_type_choices)
-    product_type = models.CharField(verbose_name='产品类型', max_length=10)
+    # product_type = models.CharField(verbose_name='产品类型', max_length=10)
     amount = models.FloatField(verbose_name="订单金额")
     pay_channel = models.SmallIntegerField(verbose_name='支付渠道', choices=pay_channel_choices, null=True, blank=True)
     pay_status = models.SmallIntegerField(verbose_name="订单状态", choices=pay_status_choices, default=1)
@@ -88,7 +88,7 @@ class InterfaceChannel(models.Model):
     产品接口通道
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='用户')
-    product_type = models.CharField(verbose_name='产品类型', max_length=10)
+    product_package = models.ForeignKey(ProductPackage, on_delete=models.CASCADE, verbose_name='产品套餐包')
     access_token = models.CharField(verbose_name='通行秘钥', max_length=64, default=generate_access_token)
     concurrency = models.IntegerField(verbose_name='并发数')
     creation_time = models.DateTimeField(verbose_name='创建时间')

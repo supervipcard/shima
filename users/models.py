@@ -17,3 +17,4 @@ class Wallet(models.Model):
     """
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, verbose_name='用户')
     balance = models.FloatField(verbose_name='余额', default=0.0)
+    consumption_amount = models.FloatField(verbose_name='累积消费', default=0.0)
