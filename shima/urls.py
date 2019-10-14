@@ -41,5 +41,8 @@ urlpatterns = [
     path('user_info/', UserInfo.as_view(), name='user_info'),
     path('user_password/', UserPassword.as_view(), name='user_password'),
     path('homepage/', HomePage.as_view(), name='homepage'),
-    path('operate/', Operate.as_view(), name='operate')
+    path('operate/', Operate.as_view(), name='operate'),
+    path('alipay/return/', AliPayView.as_view(), name='alipay'),
+
+    path('order/', OrderPlace.as_view(), name='order')
 ]

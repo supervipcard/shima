@@ -1,15 +1,18 @@
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
+from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.forms import Form, fields
+from datetime import datetime, timedelta
 import json
 import time
 import random
 
 from .models import *
 from users.models import *
+from center.alipay_utils import AliPayModule
 
 
 def global_setting(request):
@@ -72,13 +75,58 @@ class OrderPlace(View):
             product_package = ProductPackage.objects.get(id=product_package_id)
 
             user = request.user
-            order_id = time.time() + random.randint(10000, 99999)
-            transaction_type = 2
-            amount = product_package.price * period * number
-            order = Order(user=user, order_id=order_id, transaction_type=transaction_type, amount=amount)
+            order_id = "{time_str}{userid}{ranstr}".format(time_str=time.strftime("%Y%m%d%H%M%S"), userid=request.user.id, ranstr=random.randint(10000, 99999))
+            amount = product_package.price * int(period) * int(number) + product_package.additional_concurrency_price * int(additional_concurrency)
+            order = Order(user=user, order_id=order_id, transaction_type=2, amount=amount)
             order.save()
             order_product = OrderProduct(order=order, product_package=product_package, period=period, number=number, additional_concurrency=additional_concurrency)
             order_product.save()
-            return JsonResponse({"code": 0, "message": '下单成功'})
+            order_url = AliPayModule.pay(order_id, amount)
+            return JsonResponse({"code": 0, "message": '下单成功', 'data': {'order_url': order_url}})
         else:
             return JsonResponse({'code': 1001, 'message': '请求参数异常'})
+
+
+class AliPayView(View):
+    def get(self, request):
+        data = request.GET.dict()
+        sign = data.pop('sign')
+        result = AliPayModule.verify(data, sign)
+        print(result)
+        if result:
+            return HttpResponse('success')
+        else:
+            return HttpResponse('failure')
+
+    def post(self, request):
+        data = request.POST.dict()
+        sign = data.pop('sign')
+        result = AliPayModule.verify(data, sign)
+        print(result)
+        if result:
+            order_id = data['out_trade_no']
+            order = Order.objects.get(order_id=order_id)
+            order.trade_no = data['trade_no']
+            order.pay_time = datetime.now()
+            order.pay_status = 2
+            order.save()
+
+            order_product = OrderProduct.objects.get(order=order)
+            user = order_product.order.user
+            product_package = order_product.product_package
+            concurrency = order_product.product_package.default_concurrency + order_product.additional_concurrency
+            creation_time = datetime.now()
+            if order_product.product_package.time_limit == 1:
+                expiration_time = creation_time + timedelta(hours=order_product.product_package.time_limit * order_product.period)
+            else:
+                expiration_time = creation_time + timedelta(days={2: 1, 3: 7, 4: 30, 5: 90, 6: 365}.get(order_product.product_package.time_limit) * order_product.period)
+            for i in range(order_product.number):
+                channel = InterfaceChannel(user=user, product_package=product_package, concurrency=concurrency, creation_time=creation_time, expiration_time=expiration_time)
+                channel.save()
+            return HttpResponse('success')
+        else:
+            return HttpResponse('failure')
+
+    @csrf_exempt
+    def dispatch(self, *args, **kwargs):
+        return super(AliPayView, self).dispatch(*args, **kwargs)
