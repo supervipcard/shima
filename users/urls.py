@@ -32,6 +32,4 @@ urlpatterns = [
     path('verify_phone/', VerifyPhone.as_view(), name='verify_phone'),
     path('reset_password/', ResetPassword.as_view(), name='reset_password'),
     path('change_password/', ChangePassword.as_view(), name='change_password'),
-
-    path('index/', index, name='index'),
 ]

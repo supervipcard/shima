@@ -280,8 +280,3 @@ class Logout(View):
     @csrf_exempt
     def dispatch(self, *args, **kwargs):
         return super(Logout, self).dispatch(*args, **kwargs)
-
-
-@login_required
-def index(request):
-    return render(request, 'index.html')
