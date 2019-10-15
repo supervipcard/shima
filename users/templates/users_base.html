@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="{% static "layuiadmin/layui/css/layui.css" %}" media="all">
   <link rel="stylesheet" href="{% static "layuiadmin/style/admin.css" %}" media="all">
   <link rel="stylesheet" href="{% static "layuiadmin/style/login.css" %}" media="all">
+  <script type="text/javascript" src="{% static "js/jquery-2.1.4.min.js" %}"></script>
 </head>
 <body>
   <div class="layadmin-user-login layadmin-user-display-show" id="LAY-user-login" style="display: none;">
@@ -26,6 +27,88 @@
     </div>
   </div>
   <script src="{% static "layuiadmin/layui/layui.js" %}"></script>
+  <script>
+      DISABLED = 'layui-disabled';
+
+      $('#LAY-user-get-vercode').click(function () {
+          $(this).attr("src", "{% url 'captcha' %}?u={{ code_id }}&random=" + new Date().getTime())
+      });
+
+      function sendAuthCode(options){
+          options = $.extend({
+            seconds: 60
+            ,elemPhone: '#LAY_phone'
+            ,elemVercode: '#LAY_vercode'
+          }, options);
+
+          var seconds = options.seconds
+          ,btn = $(options.elem)
+          ,token = null
+          ,timer, countDown = function(loop){
+            seconds--;
+            if(seconds < 0){
+              btn.removeClass(DISABLED).html('获取验证码');
+              seconds = options.seconds;
+              clearInterval(timer);
+            } else {
+              btn.addClass(DISABLED).html(seconds + '秒后重获');
+            }
+
+            if(!loop){
+              timer = setInterval(function(){
+                countDown(true);
+              }, 1000);
+            }
+          };
+
+          options.elemPhone = $(options.elemPhone);
+          options.elemVercode = $(options.elemVercode);
+
+          btn.on('click', function(){
+            var elemPhone = options.elemPhone
+            ,value = elemPhone.val();
+
+            if(seconds !== options.seconds || $(this).hasClass(DISABLED)) return;
+
+            if(!/^1\d{10}$/.test(value)){
+              elemPhone.focus();
+              return layer.msg('请输入正确的手机号')
+            };
+
+            $.ajax({
+              url: "{% url "sendsms" %}"
+              ,type: 'POST'
+              ,data: JSON.stringify({phone: value})
+              ,dataType: "json"
+              ,contentType:"application/json;charset=utf-8"
+              ,beforeSend: function(xhr, settings) {
+                  xhr.setRequestHeader("X-CSRFToken", $('[name="csrfmiddlewaretoken"]').val());
+              }
+              ,success: function(res){
+                  if (res['code'] === 0) {
+                    layer.msg('验证码已发送至你的手机，请注意查收', {
+                        icon: 1
+                        ,shade: 0
+                    });
+                    options.elemVercode.focus();
+                    countDown();
+                  }
+                  else {
+                      layer.msg(res["message"]);
+                  }
+              }
+              ,error: function() {
+                  alert("服务器异常");
+              }
+            });
+          });
+      }
+      sendAuthCode({
+        elem: '#LAY-user-getsmscode'
+        ,elemPhone: '#LAY-user-login-cellphone'
+        ,elemVercode: '#LAY-user-login-vercode'
+      })
+  </script>
   {% block script %}{% endblock %}
 </body>
 </html>

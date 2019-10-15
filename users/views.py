@@ -137,10 +137,10 @@ class Register(View):
 class SignInView(View):
     def get(self, request):
         if request.user.is_authenticated:
-            return redirect('sign_in')
+            return redirect('index')
         next_page = request.GET.get('next')
         if not next_page or urlparse(next_page).netloc != '':
-            next_page = resolve_url('sign_in')
+            next_page = resolve_url('index')
         code_id = str(uuid.uuid1())
         return render(request, 'sign_in.html', {"code_id": code_id, 'next_page': next_page})
 
@@ -282,5 +282,6 @@ class Logout(View):
         return super(Logout, self).dispatch(*args, **kwargs)
 
 
+@login_required
 def index(request):
     return render(request, 'index.html')
