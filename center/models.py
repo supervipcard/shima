@@ -31,8 +31,9 @@ class ProductPackage(models.Model):
 
     product = models.ForeignKey(Product, on_delete=models.PROTECT, verbose_name='产品')
     time_limit = models.SmallIntegerField(verbose_name='套餐期限', choices=time_limit_choices)
-    price = models.FloatField(verbose_name='套餐价格')
+    price = models.FloatField(verbose_name='套餐单价')
     default_concurrency = models.IntegerField(verbose_name='默认并发数', default=5)
+    additional_concurrency_price = models.FloatField(verbose_name='额外并发单价')
 
 
 class Order(models.Model):
@@ -60,12 +61,14 @@ class Order(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='用户')
     order_id = models.CharField(verbose_name='订单编号', max_length=30, primary_key=True)
+    trade_no = models.CharField(verbose_name="支付宝交易号", max_length=100, unique=True, null=True, blank=True)
     transaction_type = models.SmallIntegerField(verbose_name='交易类型', choices=transaction_type_choices)
-    product_type = models.CharField(verbose_name='产品类型', max_length=10)
+    # product_type = models.CharField(verbose_name='产品类型', max_length=10)
     amount = models.FloatField(verbose_name="订单金额")
-    pay_channel = models.SmallIntegerField(verbose_name='支付渠道', choices=pay_channel_choices, null=True, blank=True)
+    pay_channel = models.SmallIntegerField(verbose_name='支付渠道', choices=pay_channel_choices, default=2)
     pay_status = models.SmallIntegerField(verbose_name="订单状态", choices=pay_status_choices, default=1)
-    pay_time = models.DateTimeField(verbose_name='下单时间', auto_now_add=True)
+    pay_time = models.DateTimeField(verbose_name='支付时间', null=True, blank=True)
+    add_time = models.DateTimeField(verbose_name='下单时间', auto_now_add=True)
 
 
 class OrderProduct(models.Model):
@@ -88,7 +91,7 @@ class InterfaceChannel(models.Model):
     产品接口通道
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='用户')
-    product_type = models.CharField(verbose_name='产品类型', max_length=10)
+    product_package = models.ForeignKey(ProductPackage, on_delete=models.CASCADE, verbose_name='产品套餐包')
     access_token = models.CharField(verbose_name='通行秘钥', max_length=64, default=generate_access_token)
     concurrency = models.IntegerField(verbose_name='并发数')
     creation_time = models.DateTimeField(verbose_name='创建时间')

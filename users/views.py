@@ -8,11 +8,13 @@ from urllib.parse import urlparse
 from captcha.image import ImageCaptcha
 from django.contrib.auth import get_user_model, authenticate, login, logout
 from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.db.models import Q
 from django.forms import Form, fields
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect, resolve_url
+from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django_redis import get_redis_connection
@@ -32,7 +34,7 @@ class CustomBackend(ModelBackend):
         if username is None:
             username = kwargs.get(User.USERNAME_FIELD)
         try:
-            user = User.objects.get(Q(username=username) | Q(email=username))
+            user = User.objects.get(Q(username=username) | Q(phone=username))
         except User.DoesNotExist:
             # Run the default password hasher once to reduce the timing
             # difference between an existing and a nonexistent user (#20760).
@@ -42,7 +44,7 @@ class CustomBackend(ModelBackend):
                 return user
 
 
-class SendEmail(View):
+class SendSMS(View):
     number = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u',
                 'v', 'w', 'x', 'y', 'z']
@@ -50,16 +52,16 @@ class SendEmail(View):
                 'V', 'W', 'X', 'Y', 'Z']
 
     def post(self, request):
-        email = json.loads(request.body).get('email')
-        if email:
+        phone = json.loads(request.body).get('phone')
+        if phone:
             text_list = random.choices(self.number + self.alphabet + self.ALPHABET, k=4)
             code_text = ''.join(text_list)
             message = '你的验证码是 {}'.format(code_text)
             print(message)
-            key = 'emailcode:{}'.format(email)
+            key = 'smscode:{}'.format(phone)
             rs.set(key, code_text)
             rs.expire(key, 60)
-            return JsonResponse({'code': 0, 'message': '邮件发送成功'})
+            return JsonResponse({'code': 0, 'message': '短信发送成功'})
         else:
             return JsonResponse({'code': 1001, 'message': '请求参数异常'})
 
@@ -93,8 +95,8 @@ class SignUpView(View):
 
 class RegisterForm(Form):
     username = fields.CharField()
-    email = fields.EmailField()
-    email_code = fields.CharField()
+    phone = fields.RegexField(r'^\d{11}$')
+    sms_code = fields.CharField()
     password = fields.CharField()
 
 
@@ -103,27 +105,27 @@ class Register(View):
         form = RegisterForm(json.loads(request.body))
         if form.is_valid():
             username = form.cleaned_data['username']
-            email = form.cleaned_data['email']
-            email_code = form.cleaned_data['email_code']
+            phone = form.cleaned_data['phone']
+            sms_code = form.cleaned_data['sms_code']
             password = form.cleaned_data['password']
 
-            key = 'emailcode:{}'.format(email)
+            key = 'smscode:{}'.format(phone)
             val = rs.get(key)
-            if not val or val.decode('utf8').lower() != email_code.lower():
-                return JsonResponse({'code': 2001, 'message': '邮箱验证码错误'})
+            if not val or val.decode('utf8').lower() != sms_code.lower():
+                return JsonResponse({'code': 2001, 'message': '验证码错误'})
             try:
-                User.objects.get(email=email)
+                User.objects.get(phone=phone)
             except User.DoesNotExist:
                 pass
             else:
-                return JsonResponse({'code': 2002, 'message': '邮箱已注册'})
+                return JsonResponse({'code': 2002, 'message': '手机号已注册'})
             try:
                 User.objects.get(username=username)
             except User.DoesNotExist:
                 pass
             else:
                 return JsonResponse({'code': 2003, 'message': '用户名已存在'})
-            user = User(username=username, email=email, password=password)
+            user = User(username=username, phone=phone, password=password)
             user.set_password(password)
             user.save()
             Wallet.objects.create(user=user)
@@ -135,10 +137,10 @@ class Register(View):
 class SignInView(View):
     def get(self, request):
         if request.user.is_authenticated:
-            return redirect('dashboard')
+            return redirect('sign_in')
         next_page = request.GET.get('next')
         if not next_page or urlparse(next_page).netloc != '':
-            next_page = resolve_url('dashboard')
+            next_page = resolve_url('sign_in')
         code_id = str(uuid.uuid1())
         return render(request, 'sign_in.html', {"code_id": code_id, 'next_page': next_page})
 
@@ -179,17 +181,17 @@ class ForgetPasswordView(View):
         return render(request, 'forget_password.html', {'code_id': code_id})
 
 
-class VerifyEmailForm(Form):
-    email = fields.EmailField()
+class VerifyPhoneForm(Form):
+    phone = fields.CharField()
     code_text = fields.CharField()
     code_id = fields.CharField()
 
 
-class VerifyEmail(View):
+class VerifyPhone(View):
     def post(self, request):
-        form = VerifyEmailForm(json.loads(request.body))
+        form = VerifyPhoneForm(json.loads(request.body))
         if form.is_valid():
-            email = form.cleaned_data['email']
+            phone = form.cleaned_data['phone']
             code_text = form.cleaned_data['code_text']
             code_id = form.cleaned_data['code_id']
 
@@ -198,28 +200,28 @@ class VerifyEmail(View):
             if not val or val.decode('utf8').lower() != code_text.lower():
                 return JsonResponse({'code': 4001, 'message': '验证码错误'})
             try:
-                User.objects.get(email=email)
-                response = JsonResponse({"code": 0, "message": "邮箱验证成功"})
-                response.set_cookie('email', email)
+                User.objects.get(phone=phone)
+                response = JsonResponse({"code": 0, "message": "手机号验证成功"})
+                response.set_cookie('phone', phone)
                 return response
             except User.DoesNotExist:
-                return JsonResponse({'code': 4002, 'message': '邮箱未注册'})
+                return JsonResponse({'code': 4002, 'message': '手机号不存在'})
         else:
             return JsonResponse({'code': 1001, 'message': '请求参数异常'})
 
 
 class ForgetPasswordView2(View):
     def get(self, request):
-        email = request.COOKIES.get('email')
-        if email:
-            return render(request, 'forget_password2.html', {'email': email})
+        phone = request.COOKIES.get('phone')
+        if phone:
+            return render(request, 'forget_password2.html', {'phone': phone})
         else:
             return redirect('forget_password')
 
 
 class ResetPasswordForm(Form):
-    email = fields.EmailField()
-    email_code = fields.CharField()
+    phone = fields.CharField()
+    sms_code = fields.CharField()
     password = fields.CharField()
 
 
@@ -227,21 +229,45 @@ class ResetPassword(View):
     def post(self, request):
         form = ResetPasswordForm(json.loads(request.body))
         if form.is_valid():
-            email = form.cleaned_data['email']
-            email_code = form.cleaned_data['email_code']
+            phone = form.cleaned_data['phone']
+            sms_code = form.cleaned_data['sms_code']
             password = form.cleaned_data['password']
 
-            key = 'emailcode:{}'.format(email)
+            key = 'smscode:{}'.format(phone)
             val = rs.get(key)
-            if not val or val.decode('utf8').lower() != email_code.lower():
-                return JsonResponse({'code': 5001, 'message': '邮箱验证码错误'})
+            if not val or val.decode('utf8').lower() != sms_code.lower():
+                return JsonResponse({'code': 5001, 'message': '验证码错误'})
             try:
-                user = User.objects.get(email=email)
+                user = User.objects.get(phone=phone)
                 user.set_password(password)
                 user.save()
                 return JsonResponse({"code": 0, "message": "密码重置成功"})
             except User.DoesNotExist:
-                return JsonResponse({'code': 5002, 'message': '邮箱未注册'})
+                return JsonResponse({'code': 5002, 'message': '手机号不存在'})
+        else:
+            return JsonResponse({'code': 1001, 'message': '请求参数异常'})
+
+
+class ChangePasswordForm(Form):
+    old_password = fields.CharField()
+    new_password = fields.CharField()
+
+
+class ChangePassword(View):
+    @method_decorator(login_required)
+    def post(self, request):
+        form = ChangePasswordForm(json.loads(request.body))
+        if form.is_valid():
+            old_password = form.cleaned_data['old_password']
+            new_password = form.cleaned_data['new_password']
+            user = request.user
+            if user.check_password(old_password):
+                user.set_password(new_password)
+                user.save()
+                login(request, user)
+                return JsonResponse({"code": 0, "message": "密码修改成功"})
+            else:
+                return JsonResponse({"code": 6001, "message": "当前密码错误"})
         else:
             return JsonResponse({'code': 1001, 'message': '请求参数异常'})
 
@@ -254,3 +280,7 @@ class Logout(View):
     @csrf_exempt
     def dispatch(self, *args, **kwargs):
         return super(Logout, self).dispatch(*args, **kwargs)
+
+
+def index(request):
+    return render(request, 'index.html')

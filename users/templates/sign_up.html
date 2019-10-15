@@ -1,81 +1,109 @@
 {% extends 'users_base.html' %}
+{% load static %}
 
-{% block title %}注册{% endblock %}
-
-{% block heading %}
-<div class="col-xs-6">
-    <a href="{% url 'sign_in' %}">登录</a>
-</div>
-<div class="col-xs-6">
-    <a href="{% url 'sign_up' %}" class="active">注册</a>
-</div>
-{% endblock %}
+{% block title %}注册 - 识码{% endblock %}
 
 {% block form %}
-<form id="register-form" method="post">
-    {% csrf_token %}
-    <div class="form-group">
-        <input type="text" name="username" id="username" tabindex="1" class="form-control" placeholder="用户名" required="required" autocomplete="off">
-    </div>
-    <div class="form-group">
-        <input type="email" name="email" id="email" tabindex="2" class="form-control" placeholder="邮箱" required="required" autocomplete="off">
-    </div>
-    <div class="input-group">
-        <input type="text" name="email_code" id="email_code" tabindex="3" class="form-control" placeholder="输入4位邮箱验证码" required="required" autocomplete="off">
-        <span class="input-group-btn">
-            <button type="button" id="sendmail" class="btn btn-primary">获取邮箱验证码</button>
-        </span>
-    </div>
-    <div class="form-group">
-        <input type="password" name="password" id="password" tabindex="4" class="form-control" placeholder="设置密码" required="required" minlength="6" maxlength="30">
-    </div>
-    <div class="form-group">
-        <input type="password" name="confirm_password" id="confirm_password" tabindex="5" class="form-control" placeholder="确认密码" required="required">
-    </div>
-    <div class="form-group">
-        <div class="row">
-            <div class="col-sm-6 col-sm-offset-3">
-                <button type="submit" id="register-submit" tabindex="6" class="btn btn-custom">注册</button>
+    <div class="layadmin-user-login-box layadmin-user-login-body layui-form">
+        {% csrf_token %}
+        <div class="layui-form-item">
+          <label class="layadmin-user-login-icon layui-icon layui-icon-username" for="LAY-user-login-nickname"></label>
+          <input type="text" name="nickname" id="LAY-user-login-nickname" lay-verify="nickname" placeholder="用户名" class="layui-input">
+        </div>
+        <div class="layui-form-item">
+          <label class="layadmin-user-login-icon layui-icon layui-icon-cellphone" for="LAY-user-login-cellphone"></label>
+          <input type="text" name="cellphone" id="LAY-user-login-cellphone" lay-verify="phone" placeholder="手机号" class="layui-input">
+        </div>
+        <div class="layui-form-item">
+          <div class="layui-row">
+            <div class="layui-col-xs7">
+              <label class="layadmin-user-login-icon layui-icon layui-icon-vercode" for="LAY-user-login-vercode"></label>
+              <input type="text" name="vercode" id="LAY-user-login-vercode" lay-verify="required" placeholder="短信验证码" class="layui-input">
             </div>
+            <div class="layui-col-xs5">
+              <div style="margin-left: 10px;">
+                <button type="button" class="layui-btn layui-btn-primary layui-btn-fluid" id="LAY-user-getsmscode">获取验证码</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="layui-form-item">
+          <label class="layadmin-user-login-icon layui-icon layui-icon-password" for="LAY-user-login-password"></label>
+          <input type="password" name="password" id="LAY-user-login-password" lay-verify="pass" placeholder="密码" class="layui-input">
+        </div>
+        <div class="layui-form-item">
+          <label class="layadmin-user-login-icon layui-icon layui-icon-password" for="LAY-user-login-repass"></label>
+          <input type="password" name="repass" id="LAY-user-login-repass" lay-verify="required" placeholder="确认密码" class="layui-input">
+        </div>
+        <div class="layui-form-item">
+          <input type="checkbox" name="agreement" lay-skin="primary" title="同意用户协议" checked>
+        </div>
+        <div class="layui-form-item">
+          <button class="layui-btn layui-btn-fluid" lay-submit lay-filter="LAY-user-reg-submit">注 册</button>
+        </div>
+        <div class="layui-trans layui-form-item layadmin-user-login-other">
+          <label>社交账号注册</label>
+          <a href="javascript:;"><i class="layui-icon layui-icon-login-qq"></i></a>
+          <a href="javascript:;"><i class="layui-icon layui-icon-login-wechat"></i></a>
+          <a href="javascript:;"><i class="layui-icon layui-icon-login-weibo"></i></a>
+
+          <a href="{% url "sign_in" %}" class="layadmin-user-jump-change layadmin-link layui-hide-xs">用已有帐号登入</a>
+          <a href="{% url "sign_in" %}" class="layadmin-user-jump-change layadmin-link layui-hide-sm layui-show-xs-inline-block">登入</a>
         </div>
     </div>
-</form>
 {% endblock %}
-{% block js %}
-    <script>
-    $('#register-form').submit(function () {
-        var username = $("#username").val(),
-            email = $("#email").val(),
-            email_code = $("#email_code").val(),
-            password = $("#password").val(),
-            confirm_password = $("#confirm_password").val();
-        if (password != confirm_password) {
-            show_error("两次输入的密码不一致");
-            return false
+
+{% block script %}
+  <script>
+  layui.config({
+    base: '{% static "layuiadmin" %}/' //静态资源所在路径
+  }).extend({
+    index: 'lib/index' //主入口模块
+  }).use(['index', 'user'], function(){
+    var $ = layui.$
+    ,setter = layui.setter
+    ,admin = layui.admin
+    ,form = layui.form
+    ,router = layui.router();
+
+    form.render();
+
+    //提交
+    form.on('submit(LAY-user-reg-submit)', function(obj){
+      var field = obj.field;
+
+      //确认密码
+      if(field.password !== field.repass){
+        return layer.msg('两次密码输入不一致');
+      }
+
+      //是否同意用户协议
+      if(!field.agreement){
+        return layer.msg('你必须同意用户协议才能注册');
+      }
+
+      //请求接口
+      admin.req({
+        url: "{% url "register" %}" //实际使用请改成服务端真实接口
+        ,type: "POST"
+        ,data: JSON.stringify({username: field.nickname, phone: field.cellphone, sms_code: field.vercode, password: field.password})
+        ,dataType: "json"
+        ,contentType:"application/json;charset=utf-8"
+        ,beforeSend: function(xhr, settings) {
+            xhr.setRequestHeader("X-CSRFToken", $('[name="csrfmiddlewaretoken"]').val());
         }
-        var data = {username: username, email: email, email_code: email_code, password: password};
-        $.ajax({
-            url: "{% url "register" %}",
-            type: "POST",
-            data: JSON.stringify(data),
-            dataType: "json",
-            contentType:"application/json;charset=utf-8",
-            beforeSend: function(xhr, settings) {
-                xhr.setRequestHeader("X-CSRFToken", $('[name="csrfmiddlewaretoken"]').val());
-            },
-            success: function (result) {
-                if (result['code'] === 0) {
-                    window.location.href = {% url "sign_in" %};
-                }
-                else {
-                    show_error(result["message"]);
-                }
-            },
-            error: function() {
-                show_error("服务器异常");
-            }
-        });
-        return false
+        ,done: function(res){
+          layer.msg('注册成功', {
+            offset: '15px'
+            ,icon: 1
+            ,time: 1000
+          }, function(){
+            location.href = '{% url "sign_in" %}'; //跳转到登入页
+          });
+        }
+      });
+      return false;
     });
-    </script>
+  });
+  </script>
 {% endblock %}
