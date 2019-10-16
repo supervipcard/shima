@@ -267,7 +267,7 @@ class ChangePassword(View):
                 login(request, user)
                 return JsonResponse({"code": 0, "message": "密码修改成功"})
             else:
-                return JsonResponse({"code": 6001, "message": "当前密码错误"})
+                return JsonResponse({"code": 6001, "message": "旧密码错误"})
         else:
             return JsonResponse({'code': 1001, 'message': '请求参数异常'})
 

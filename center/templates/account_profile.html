@@ -1,0 +1,166 @@
+{% extends "center_base.html" %}
+{% load static %}
+
+{% block sidebar-menu %}
+<ul class="sidebar-menu" data-widget="tree">
+    <li class="treeview">
+      <a href="#">
+        <i class="fa fa-server"></i>
+        <span>识别服务</span>
+        <span class="pull-right-container">
+          <i class="fa fa-angle-left pull-right"></i>
+        </span>
+      </a>
+      <ul class="treeview-menu">
+        {% for product in products %}
+            {% if product.is_open %}
+                <li><a href=""><i class="fa fa-circle-o"></i> {{ product.name }}</a></li>
+            {% endif %}
+        {% endfor %}
+      </ul>
+    </li>
+    <li class="active treeview">
+      <a href="#">
+        <i class="fa fa-user"></i>
+        <span>用户中心</span>
+        <span class="pull-right-container">
+          <span class="fa fa-angle-left pull-right"></span>
+        </span>
+      </a>
+      <ul class="treeview-menu">
+        <li class="active"><a href="{% url "account_profile" %}"><i class="fa fa-circle-o"></i> 账号管理</a></li>
+        <li><a href=""><i class="fa fa-circle-o"></i> 我的钱包</a></li>
+        <li><a href=""><i class="fa fa-circle-o"></i> 订单管理</a></li>
+        <li><a href=""><i class="fa fa-circle-o"></i> 识别记录</a></li>
+      </ul>
+    </li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<section class="content">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h1 class="panel-title">账号信息</h1>
+      </div>
+      <div class="panel-body">
+        <div class="row">
+          <div class="col-lg-6">
+              <div class="form-group">
+                <label>用户名</label>
+                <input type="text" class="form-control" value="{{ user.username }}" readonly>
+              </div>
+          </div>
+          <div class="col-lg-6">
+              <div class="form-group">
+                <label>手机号码</label>
+                <input type="text" class="form-control" value="{{ user.phone }}" readonly>
+              </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-lg-6">
+              <div class="form-group">
+                <label>注册时间</label>
+                <input type="text" class="form-control" value="{{ user.date_joined }}" readonly>
+              </div>
+          </div>
+        </div>
+
+        <label>登录密码</label>
+        <div><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">修改</button></div>
+        <!-- Modal -->
+        <div class="modal fade bs-example-modal-sm" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+          <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">修改密码</h4>
+              </div>
+              <div class="layui-form">
+                  {% csrf_token %}
+                  <div class="modal-body">
+                      <div class="form-group">
+                        <label for="user-old-password">旧密码</label>
+                        <input type="password" class="form-control" name='oldpassword' id="user-old-password" placeholder="旧密码" lay-verify="required">
+                      </div>
+                      <div class="form-group">
+                        <label for="user-new-password">新密码</label>
+                        <input type="password" class="form-control" name='newpassword' id="user-new-password" placeholder="新密码" lay-verify="pass">
+                      </div>
+                      <div class="form-group">
+                        <label for="user-new-repass">确认密码</label>
+                        <input type="password" class="form-control" name='repass' id="user-new-repass" placeholder="确认密码" lay-verify="required">
+                      </div>
+                  </div>
+                  <div class="modal-footer">
+                      <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                      <button type="submit" class="btn btn-primary" lay-submit lay-filter="user-change-password">确认</button>
+                  </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block script %}
+    <script>
+      layui.config({
+        base: '{% static "layuiadmin" %}/' //静态资源所在路径
+      }).extend({
+        index: 'lib/index' //主入口模块
+      }).use(['index', 'user'], function(){
+        var $ = layui.$
+        ,setter = layui.setter
+        ,admin = layui.admin
+        ,form = layui.form
+        ,router = layui.router();
+
+        form.render();
+
+        //重置密码
+        form.on('submit(user-change-password)', function(obj){
+          var field = obj.field;
+
+          //确认密码
+          if(field.newpassword !== field.repass){
+            return layer.msg('两次密码输入不一致');
+          }
+
+          //请求接口
+          $.ajax({
+            url: '{% url "change_password" %}' //实际使用请改成服务端真实接口
+            ,type: "POST"
+            ,data: JSON.stringify({old_password: field.oldpassword, new_password: field.newpassword})
+            ,dataType: "json"
+            ,contentType:"application/json;charset=utf-8"
+            ,beforeSend: function(xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", $('[name="csrfmiddlewaretoken"]').val());
+            }
+            ,success: function(res){
+                if (res['code'] === 0) {
+                  layer.msg('密码已成功修改', {
+                    offset: '15px'
+                    ,icon: 1
+                    ,time: 1000
+                  }, function(){
+                    location.reload();
+                  });
+                }
+                else {
+                    layer.msg(res["message"]);
+                }
+            }
+            ,error: function() {
+                alert("服务器异常");
+            }
+          });
+          return false;
+        });
+      });
+    </script>
+{% endblock %}

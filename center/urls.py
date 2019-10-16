@@ -19,4 +19,5 @@ from center.views import *
 
 urlpatterns = [
     path('index/', Index.as_view(), name='index'),
+    path('account/profile/', AccountProfile.as_view(), name='account_profile')
 ]

@@ -15,9 +15,9 @@ from users.models import *
 from center.alipay_utils import AliPayModule
 
 
-# def global_setting(request):
-#     product = Product.objects.all()
-#     return {'product': product}
+def global_setting(request):
+    products = Product.objects.all()
+    return {'products': products}
 
 
 class Index(View):
@@ -25,37 +25,15 @@ class Index(View):
     def get(self, request):
         user = request.user
         wallet = Wallet.objects.get(user=user)
-        products = Product.objects.all()
         channel_num = len(InterfaceChannel.objects.filter(user=user))
-        return render(request, 'index.html', {'user': user, 'wallet': wallet, 'products': products, 'channel_num': channel_num})
+        return render(request, 'index.html', {'user': user, 'wallet': wallet, 'channel_num': channel_num})
 
 
-class UserInfo(View):
+class AccountProfile(View):
     @method_decorator(login_required)
     def get(self, request):
         user = request.user
-        return render(request, 'set/user/info.html', {'user': user})
-
-
-class UserPassword(View):
-    @method_decorator(login_required)
-    def get(self, request):
-        user = request.user
-        return render(request, 'set/user/password.html', {'user': user})
-
-
-class HomePage(View):
-    @method_decorator(login_required)
-    def get(self, request):
-        user = request.user
-        wallet = Wallet.objects.get(user=user)
-        return render(request, 'home/homepage2.html', {'user': user, 'wallet': wallet})
-
-
-class Operate(View):
-    @method_decorator(login_required)
-    def get(self, request):
-        return render(request, 'operate.html')
+        return render(request, 'account_profile.html', {'user': user})
 
 
 class OrderPlaceForm(Form):
