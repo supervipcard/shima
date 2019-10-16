@@ -60,7 +60,7 @@
 
       <div class="navbar-custom-menu">
         <ul class="nav navbar-nav">
-            <li><a href="javascript:void(0);" title="退出登录"><em class="fa fa-sign-out"></em></a></li>
+            <li><a href="javascript:void(0);" id='logout' title="退出登录"><em class="fa fa-sign-out"></em></a></li>
         </ul>
       </div>
     </nav>
@@ -76,7 +76,7 @@
         </div>
         <div class="pull-left info">
           <p>{{ user.username }}</p>
-          <a href="#"><i class="fa fa-circle text-success"></i> Online</a>
+          <a href="#"><i class="fa fa-circle text-success"></i> 在线</a>
         </div>
       </div>
       <!-- sidebar menu: : style can be found in sidebar.less -->
@@ -174,5 +174,30 @@
 <script src="{% static "AdminLTE-2.4.18/dist/js/pages/dashboard.js" %}"></script>
 <!-- AdminLTE for demo purposes -->
 <script src="{% static "AdminLTE-2.4.18/dist/js/demo.js" %}"></script>
+<script>
+    $('#logout').click(function () {
+        $.ajax({
+            url: "{% url "logout" %}",
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json;charset=utf-8",
+            // beforeSend: function(xhr, settings) {
+            //     xhr.setRequestHeader("X-CSRFToken", $('[name="csrfmiddlewaretoken"]').val());
+            // },
+            success: function (result) {
+                if (result['code'] === 0) {
+                    window.location.href = "{% url "sign_in" %}";
+                }
+                else {
+                    alert("服务器异常");
+                }
+            },
+            error: function () {
+                alert("服务器异常");
+            }
+        });
+        return false
+    });
+</script>
 </body>
 </html>
