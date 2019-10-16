@@ -15,16 +15,19 @@ from users.models import *
 from center.alipay_utils import AliPayModule
 
 
-def global_setting(request):
-    product = Product.objects.all()
-    return {'product': product}
+# def global_setting(request):
+#     product = Product.objects.all()
+#     return {'product': product}
 
 
 class Index(View):
     @method_decorator(login_required)
     def get(self, request):
         user = request.user
-        return render(request, 'index.html', {'user': user})
+        wallet = Wallet.objects.get(user=user)
+        products = Product.objects.all()
+        channel_num = len(InterfaceChannel.objects.filter(user=user))
+        return render(request, 'index.html', {'user': user, 'wallet': wallet, 'products': products, 'channel_num': channel_num})
 
 
 class UserInfo(View):

@@ -1,1 +1,48 @@
 {% extends "center_base.html" %}
+
+{% block content %}
+<section class="content">
+  <!-- Small boxes (Stat box) -->
+  <div class="row">
+    <div class="col-lg-3 col-xs-6">
+      <!-- small box -->
+      <div class="small-box bg-aqua">
+        <div class="inner">
+          <h3>{{ channel_num }}<sup style="font-size: 22px; top: -.2em; font-weight: 400"> 条</sup></h3>
+          <p>接口通道</p>
+        </div>
+        <div class="icon">
+          <i class="fa fa-cloud"></i>
+        </div>
+      </div>
+    </div>
+    <!-- ./col -->
+    <div class="col-lg-3 col-xs-6">
+      <!-- small box -->
+      <div class="small-box bg-green">
+        <div class="inner">
+          <h3>{{ wallet.balance }}<sup style="font-size: 22px; top: -.2em; font-weight: 400"> 元</sup></h3>
+          <p>钱包余额</p>
+        </div>
+        <div class="icon">
+          <i class="fa fa-money"></i>
+        </div>
+      </div>
+    </div>
+    <!-- ./col -->
+    <div class="col-lg-3 col-xs-6">
+      <!-- small box -->
+      <div class="small-box bg-yellow">
+        <div class="inner">
+          <h3>{{ wallet.consumption_amount }}<sup style="font-size: 22px; top: -.2em; font-weight: 400"> 元</sup></h3>
+          <p>累积消费</p>
+        </div>
+        <div class="icon">
+          <i class="fa fa-credit-card"></i>
+        </div>
+      </div>
+    </div>
+    <!-- ./col -->
+  </div>
+</section>
+{% endblock %}
