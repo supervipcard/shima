@@ -18,7 +18,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django_redis import get_redis_connection
-from users.models import Wallet
+from .models import Wallet
 
 User = get_user_model()
 

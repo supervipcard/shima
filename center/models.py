@@ -44,6 +44,7 @@ class Order(models.Model):
         (1, "充值"),
         (2, "新购"),
         (3, "续费"),
+        (4, "升级"),
     )
 
     pay_channel_choices = (

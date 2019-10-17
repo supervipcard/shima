@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'users',
     'xadmin',
     'crispy_forms',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -173,3 +174,10 @@ SESSION_COOKIE_HTTPONLY = True  # 是否Session的cookie只支持http传输
 SESSION_COOKIE_AGE = 604800  # Session的cookie失效日期
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # 是否关闭浏览器使得Session过期
 SESSION_SAVE_EVERY_REQUEST = False  # 是否每次请求都保存Session，默认修改之后才保存
+
+REST_FRAMEWORK = {
+    # 分页
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    # 每页显示的个数
+    'PAGE_SIZE': 10,
+}

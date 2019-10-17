@@ -21,6 +21,7 @@
        folder instead of downloading all of them to reduce the load. -->
   <link rel="stylesheet" href="{% static "AdminLTE-2.4.18/dist/css/skins/_all-skins.min.css" %}">
   <link rel="stylesheet" href="{% static "css/custom.css" %}">
+  {% block css %}{% endblock %}
   <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
   <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
   <!--[if lt IE 9]>
@@ -99,8 +100,8 @@
           </a>
           <ul class="treeview-menu">
             <li><a href="{% url "account_profile" %}"><i class="fa fa-circle-o"></i> 账号管理</a></li>
-            <li><a href=""><i class="fa fa-circle-o"></i> 我的钱包</a></li>
-            <li><a href=""><i class="fa fa-circle-o"></i> 订单管理</a></li>
+            <li><a href="{% url "account_wallet" %}"><i class="fa fa-circle-o"></i> 我的钱包</a></li>
+            <li><a href="{% url "account_order" %}"><i class="fa fa-circle-o"></i> 订单管理</a></li>
             <li><a href=""><i class="fa fa-circle-o"></i> 识别记录</a></li>
           </ul>
         </li>

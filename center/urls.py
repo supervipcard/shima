@@ -15,9 +15,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from center.views import *
+from .views import *
 
 urlpatterns = [
     path('index/', Index.as_view(), name='index'),
-    path('account/profile/', AccountProfile.as_view(), name='account_profile')
+    path('account/profile/', AccountProfile.as_view(), name='account_profile'),
+    path('account/wallet/', AccountWallet.as_view(), name='account_wallet'),
+    path('account/order/', AccountOrder.as_view(), name='account_order'),
+
+    path('alipay/return/', AliPayAPIView.as_view(), name='alipay_return'),
+    path('order/place/', OrderPlace.as_view(), name='order_place'),
+    path('order/list/', OrderListAPIView.as_view(), name='order_list'),
+    path('wallet/top-up/', WalletTopUp.as_view(), name='wallet_top_up')
 ]
