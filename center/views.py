@@ -3,12 +3,14 @@ import time
 import random
 from datetime import datetime, timedelta
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.forms import Form, fields
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.pagination import PageNumberPagination
@@ -17,7 +19,8 @@ from rest_framework.permissions import IsAuthenticated
 from .models import *
 from users.models import *
 from .alipay_utils import AliPayModule
-from .serializers import OrderListSerializer
+from .serializers import *
+from .filters import *
 
 
 def global_setting(request):
@@ -57,6 +60,16 @@ class AccountOrder(View):
         return render(request, 'account_order.html', {'user': user, 'orders': orders})
 
 
+class Service(View):
+    @method_decorator(login_required)
+    def get(self, request, pk):
+        user = request.user
+        product = Product.objects.get(id=pk)
+        product_package = ProductPackage.objects.filter(product=product)
+        # channel = InterfaceChannel.objects.filter(Q(user=user), Q(product_package__product=product))
+        return render(request, 'service.html', {'user': user, 'product': product, 'product_package': product_package})
+
+
 class OrderListAPIView(generics.ListAPIView):
     permission_classes = (IsAuthenticated, )
     authentication_classes = (SessionAuthentication, )
@@ -64,6 +77,17 @@ class OrderListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user).order_by('-add_time')
+
+
+class ChannelListAPIView(generics.ListAPIView):
+    permission_classes = (IsAuthenticated, )
+    authentication_classes = (SessionAuthentication, )
+    serializer_class = ChannelSerializer
+    filter_backends = (DjangoFilterBackend, )
+    filter_class = ChannelFilter
+
+    def get_queryset(self):
+        return InterfaceChannel.objects.filter(user=self.request.user).order_by('-creation_time')
 
 
 class OrderPlaceForm(Form):

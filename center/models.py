@@ -35,6 +35,10 @@ class ProductPackage(models.Model):
     default_concurrency = models.IntegerField(verbose_name='默认并发数', default=5)
     additional_concurrency_price = models.FloatField(verbose_name='额外并发单价')
 
+    def __str__(self):
+        return '基础（{price}元 / {time_limit}） + 额外每秒请求数（{additional_concurrency_price}元 / {time_limit}）'.format(
+            price=self.price, additional_concurrency_price=self.additional_concurrency_price, time_limit=dict(self.time_limit_choices)[self.time_limit])
+
 
 class Order(models.Model):
     """

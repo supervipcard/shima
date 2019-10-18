@@ -8,8 +8,6 @@
   <title>服务管理控制台 - 识码</title>
   <!-- Tell the browser to be responsive to screen width -->
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-  <!-- Bootstrap 3.3.7 -->
-  <link rel="stylesheet" href="{% static "AdminLTE-2.4.18/bower_components/bootstrap/dist/css/bootstrap.min.css" %}">
   <!-- Font Awesome -->
   <link rel="stylesheet" href="{% static "AdminLTE-2.4.18/bower_components/font-awesome/css/font-awesome.min.css" %}">
   <!-- Ionicons -->
@@ -20,6 +18,8 @@
   <!-- AdminLTE Skins. Choose a skin from the css/skins
        folder instead of downloading all of them to reduce the load. -->
   <link rel="stylesheet" href="{% static "AdminLTE-2.4.18/dist/css/skins/_all-skins.min.css" %}">
+  <!-- Bootstrap 3.3.7 -->
+  <link rel="stylesheet" href="{% static "AdminLTE-2.4.18/bower_components/bootstrap/dist/css/bootstrap.min.css" %}">
   <link rel="stylesheet" href="{% static "css/custom.css" %}">
   {% block css %}{% endblock %}
   <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -68,7 +68,7 @@
         </div>
         <div class="pull-left info">
           <p>{{ user.username }}</p>
-          <a href="#"><i class="fa fa-circle text-success"></i> 在线</a>
+          <a><i class="fa fa-circle text-success"></i> 在线</a>
         </div>
       </div>
       <!-- sidebar menu: : style can be found in sidebar.less -->
@@ -83,9 +83,9 @@
             </span>
           </a>
           <ul class="treeview-menu">
-            {% for product in products %}
-                {% if product.is_open %}
-                    <li><a href=""><i class="fa fa-circle-o"></i> {{ product.name }}</a></li>
+            {% for product_cell in products %}
+                {% if product_cell.is_open %}
+                    <li><a href="{% url "service" pk=product_cell.id %}"><i class="fa fa-circle-o"></i> {{ product_cell.name }}</a></li>
                 {% endif %}
             {% endfor %}
           </ul>
