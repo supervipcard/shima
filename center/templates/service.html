@@ -96,7 +96,7 @@
                           </div>
                           <div class="total_money">
                               <span>总金额：</span>
-                              <span class="text_money"><i class="fa fa-cny"></i> <span id="money">1.0</span></span>
+                              <span class="text_money"><i class="fa fa-cny"></i> <span id="money">{{ product_package.first.price }}</span></span>
                           </div>
                       </div>
                       <div class="modal-footer">
@@ -131,6 +131,7 @@ function calculate(){
 <script>
 $(function () {
     $('#assets_table').DataTable({
+      "serverSide": true,
       "paging": true,       <!-- 允许分页 -->
       "pagingType": "full_numbers",
       "lengthChange": false, <!-- 允许改变每页显示的行数 -->
@@ -139,10 +140,24 @@ $(function () {
       "info": false,         <!-- 显示信息 -->
       "autoWidth": false,    <!-- 固定宽度 -->
       "language": {"emptyTable": "暂无通道", "paginate": {"first": "«", "last": "»", "previous": "上一页", "next": "下一页"}},
-      "ajax": {
-          "url": "{% url "channel_list" %}?product={{ product.id }}",
-          "dataSrc": "results",
+      "ajax": function (data, callback, settings) {
+        var page = (data.start) / data.length + 1;
+        $.ajax({
+          "url": "{% url "channel_list" %}",
+          "data": {"product": {{ product.id }}, "page": page},
+          "success": function (result) {
+              var returnData = {};
+              returnData.recordsTotal = result.count; //返回数据全部记录
+              returnData.recordsFiltered = result.count; //后台不实现过滤功能，每次查询均视作全部结果
+              returnData.data = result.results; //返回的数据列表
+              callback(returnData);
+          }
+        })
       },
+      //"ajax": {
+      //    "url": "{% url "channel_list" %}?product={{ product.id }}",
+      //    "dataSrc": "results",
+      //},
       "columns": [
             {
                 "title" : "通道ID",
@@ -182,6 +197,7 @@ $(function () {
                     return '<button class="btn btn-primary btn-xs" type="button">续费</button><button class="btn btn-primary btn-xs" style="margin-left: 10px" type="button">升级</button>'
                 },
                 "class" : "text-center",
+                "width": "120"
             },
         ]
     });
@@ -205,7 +221,7 @@ $('#buy-form').submit(function () {
         },
         success: function (result) {
             if (result['code'] === 0) {
-                window.location.href = result['data']['order_url'];
+                window.location.href = '/order/details/' + result['data']['order_id'];
             }
             else {
                 alert("服务器异常");

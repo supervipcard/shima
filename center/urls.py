@@ -23,6 +23,7 @@ urlpatterns = [
     path('account/wallet/', AccountWallet.as_view(), name='account_wallet'),
     path('account/order/', AccountOrder.as_view(), name='account_order'),
     path('service/<int:pk>', Service.as_view(), name='service'),
+    path('order/details/<str:pk>', OrderDetails.as_view(), name='order_details'),
 
     path('alipay/return/', AliPayAPIView.as_view(), name='alipay_return'),
     path('order/place/', OrderPlace.as_view(), name='order_place'),

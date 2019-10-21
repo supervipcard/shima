@@ -4,7 +4,8 @@ import random
 from datetime import datetime, timedelta
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponse, HttpResponseForbidden, HttpResponseRedirect
+from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
@@ -70,6 +71,18 @@ class Service(View):
         return render(request, 'service.html', {'user': user, 'product': product, 'product_package': product_package})
 
 
+class OrderDetails(View):
+    @method_decorator(login_required)
+    def get(self, request, pk):
+        order = Order.objects.get(order_id=pk)
+        if order.transaction_type != 1:
+            order_product = OrderProduct.objects.get(order=order)
+        else:
+            order_product = None
+        order_url = AliPayModule.pay(order.order_id, order.amount)
+        return render(request, 'order_details.html', {'order': order, 'order_product': order_product, 'order_url': order_url})
+
+
 class OrderListAPIView(generics.ListAPIView):
     permission_classes = (IsAuthenticated, )
     authentication_classes = (SessionAuthentication, )
@@ -116,8 +129,7 @@ class OrderPlace(View):
             order.save()
             order_product = OrderProduct(order=order, product_package=product_package, period=period, number=number, additional_concurrency=additional_concurrency)
             order_product.save()
-            order_url = AliPayModule.pay(order_id, amount)
-            return JsonResponse({"code": 0, "message": '下单成功', 'data': {'order_url': order_url}})
+            return JsonResponse({"code": 0, "message": '下单成功', 'data': {'order_id': order_id}})
         else:
             return JsonResponse({'code': 1001, 'message': '请求参数异常'})
 
@@ -136,8 +148,7 @@ class WalletTopUp(View):
             order_id = "{time_str}{userid}{ranstr}".format(time_str=time.strftime("%Y%m%d%H%M%S"), userid=request.user.id, ranstr=random.randint(10000, 99999))
             order = Order(user=user, order_id=order_id, transaction_type=1, amount=amount)
             order.save()
-            order_url = AliPayModule.pay(order_id, amount)
-            return JsonResponse({"code": 0, "message": '下单成功', 'data': {'order_url': order_url}})
+            return JsonResponse({"code": 0, "message": '下单成功', 'data': {'order_id': order_id}})
         else:
             return JsonResponse({'code': 1001, 'message': '请求参数异常'})
 
@@ -147,17 +158,15 @@ class AliPayAPIView(View):
         data = request.GET.dict()
         sign = data.pop('sign')
         result = AliPayModule.verify(data, sign)
-        print(result)
         if result:
-            return HttpResponse('success')
+            return HttpResponseRedirect(reverse('account_order'))
         else:
-            return HttpResponse('failure')
+            return HttpResponseForbidden()
 
     def post(self, request):
         data = request.POST.dict()
         sign = data.pop('sign')
         result = AliPayModule.verify(data, sign)
-        print(result)
         if result:
             order_id = data['out_trade_no']
             order = Order.objects.get(order_id=order_id)

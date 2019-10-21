@@ -87,7 +87,7 @@
             },
             success: function (result) {
                 if (result['code'] === 0) {
-                    window.location.href = result['data']['order_url'];
+                    window.location.href = '/order/details/' + result['data']['order_id'];
                 }
                 else {
                     alert("服务器异常");

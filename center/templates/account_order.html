@@ -65,6 +65,7 @@ $(function () {
         pay_status_choices = {1: "待支付", 2: "已完成", 3: "超时未支付", 4: "已取消"};
 
     $('#assets_table').DataTable({
+      "serverSide": true,
       "paging": true,       <!-- 允许分页 -->
       "pagingType": "full_numbers",
       "lengthChange": false, <!-- 允许改变每页显示的行数 -->
@@ -73,10 +74,24 @@ $(function () {
       "info": false,         <!-- 显示信息 -->
       "autoWidth": false,    <!-- 固定宽度 -->
       "language": {"emptyTable": "暂无订单", "paginate": {"first": "«", "last": "»", "previous": "上一页", "next": "下一页"}},
-      "ajax": {
+      "ajax": function (data, callback, settings) {
+        var page = (data.start) / data.length + 1;
+        $.ajax({
           "url": "{% url "order_list" %}",
-          "dataSrc": "results",
+          "data": {"page": page},
+          "success": function (result) {
+              var returnData = {};
+              returnData.recordsTotal = result.count; //返回数据全部记录
+              returnData.recordsFiltered = result.count; //后台不实现过滤功能，每次查询均视作全部结果
+              returnData.data = result.results; //返回的数据列表
+              callback(returnData);
+          }
+        })
       },
+      //"ajax": {
+      //    "url": "{% url "order_list" %}",
+      //    "dataSrc": "results",
+      //},
       "columns": [
             {
                 "title" : "订单编号",
@@ -96,6 +111,9 @@ $(function () {
             {
                 "title" : "总金额",
                 "data": "amount",
+                "render": function (data, type, row) {
+                    return data.toFixed(1)
+                }
             },
             {
                 "title" : "订单状态",
@@ -108,10 +126,10 @@ $(function () {
                 "title" : "操作",
                 "render": function (data, type, row) {
                     if (row["pay_status"] === 1){
-                        return '<button class="btn btn-primary btn-xs" type="button">支付</button>'
+                        return '<a class="btn btn-primary btn-xs" href="' + '/order/details/' + row['order_id'] + '" role="button">支付</button>'
                     }
                     else {
-                        return '<button class="btn btn-default btn-xs" type="button">详情</button>'
+                        return '<a class="btn btn-default btn-xs" href="' + '/order/details/' + row['order_id'] + '" role="button">详情</button>'
                     }
                 },
                 "class" : "text-center",
