@@ -19,9 +19,12 @@ from rest_framework.permissions import IsAuthenticated
 
 from .models import *
 from users.models import *
-from .alipay_utils import AliPayModule
 from .serializers import *
 from .filters import *
+from .alipay_utils import AliPayModule
+from.redis_expired import TimeoutController
+
+controller = TimeoutController()
 
 
 def global_setting(request):
@@ -75,11 +78,8 @@ class OrderDetails(View):
     @method_decorator(login_required)
     def get(self, request, pk):
         order = Order.objects.get(order_id=pk)
-        if order.transaction_type != 1:
-            order_product = OrderProduct.objects.get(order=order)
-        else:
-            order_product = None
-        order_url = AliPayModule.pay(order.order_id, order.amount)
+        order_product = OrderProduct.objects.get(order=order) if order.transaction_type != 1 else None
+        order_url = AliPayModule.pay(order.order_id, order.amount) if order.pay_status == 1 else None
         return render(request, 'order_details.html', {'order': order, 'order_product': order_product, 'order_url': order_url})
 
 
@@ -129,6 +129,7 @@ class OrderPlace(View):
             order.save()
             order_product = OrderProduct(order=order, product_package=product_package, period=period, number=number, additional_concurrency=additional_concurrency)
             order_product.save()
+            controller.countdown(order_id)
             return JsonResponse({"code": 0, "message": '下单成功', 'data': {'order_id': order_id}})
         else:
             return JsonResponse({'code': 1001, 'message': '请求参数异常'})
@@ -148,6 +149,7 @@ class WalletTopUp(View):
             order_id = "{time_str}{userid}{ranstr}".format(time_str=time.strftime("%Y%m%d%H%M%S"), userid=request.user.id, ranstr=random.randint(10000, 99999))
             order = Order(user=user, order_id=order_id, transaction_type=1, amount=amount)
             order.save()
+            controller.countdown(order_id)
             return JsonResponse({"code": 0, "message": '下单成功', 'data': {'order_id': order_id}})
         else:
             return JsonResponse({'code': 1001, 'message': '请求参数异常'})
@@ -174,6 +176,7 @@ class AliPayAPIView(View):
             order.pay_time = datetime.now()
             order.pay_status = 2
             order.save()
+            controller.delete(order_id)
 
             user = order.user
             transaction_type = order.transaction_type
@@ -189,7 +192,7 @@ class AliPayAPIView(View):
                 total_hours = {1: 1/24, 2: 1, 3: 7, 4: 30, 5: 90, 6: 365}.get(product_package.time_limit) * 24 * order_product.period
                 expiration_time = creation_time + timedelta(hours=total_hours)
                 for i in range(order_product.number):
-                    channel = InterfaceChannel(user=user, product_package=product_package, concurrency=concurrency, creation_time=creation_time, expiration_time=expiration_time)
+                    channel = InterfaceChannel(user=user, product=product_package.product, concurrency=concurrency, creation_time=creation_time, expiration_time=expiration_time)
                     channel.save()
             return HttpResponse('success')
         else:

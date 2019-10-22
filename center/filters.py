@@ -7,7 +7,7 @@ class ChannelFilter(django_filters.rest_framework.FilterSet):
     product = django_filters.NumberFilter(label="产品ID", method='product_filter')
 
     def product_filter(self, queryset, name, value):
-        return queryset.filter(product_package__product__id=value)
+        return queryset.filter(product__id=value)
 
     class Meta:
         model = InterfaceChannel

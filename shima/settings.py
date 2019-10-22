@@ -158,7 +158,7 @@ LOGIN_URL = '/sign_in/'
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://localhost:6379/5",
+        "LOCATION": "redis://localhost:6379/6",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "PASSWORD": "test123",

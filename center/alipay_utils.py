@@ -34,6 +34,10 @@ class AliPayModule:
     def verify(cls, data, signature):
         return cls.alipay.verify(data, signature)
 
+    @classmethod
+    def close(cls, out_trade_no):
+        return cls.alipay.api_alipay_trade_close(out_trade_no=out_trade_no)
+
 
 if __name__ == '__main__':
     print(AliPayModule.pay('201910117', 0.01))

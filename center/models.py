@@ -81,7 +81,7 @@ class OrderProduct(models.Model):
     订单内的产品详情
     """
     order = models.ForeignKey(Order, on_delete=models.CASCADE, verbose_name='订单')
-    product_package = models.ForeignKey(ProductPackage, on_delete=models.CASCADE, verbose_name='产品套餐包')
+    product_package = models.ForeignKey(ProductPackage, on_delete=models.PROTECT, verbose_name='产品套餐包')
     period = models.IntegerField(verbose_name='周期', default=1)
     number = models.IntegerField(verbose_name='数量', default=1)
     additional_concurrency = models.IntegerField(verbose_name='额外并发数', default=0)
@@ -96,7 +96,7 @@ class InterfaceChannel(models.Model):
     产品接口通道
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='用户')
-    product_package = models.ForeignKey(ProductPackage, on_delete=models.CASCADE, verbose_name='产品套餐包')
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, verbose_name='产品')
     access_token = models.CharField(verbose_name='通行秘钥', max_length=64, default=generate_access_token)
     concurrency = models.IntegerField(verbose_name='并发数')
     creation_time = models.DateTimeField(verbose_name='创建时间')
