@@ -61,56 +61,142 @@
 
           </table>
           <button class="btn btn-info" data-toggle="modal" data-target="#myModal"><i class="fa fa-plus"></i> 选购通道</button>
-          <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-              <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="myModalLabel">选购{{ product.name }}通道</h4>
-                  </div>
-                  <form id="buy-form" method="post">
-                      {% csrf_token %}
-                      <div class="modal-body">
-                          <div class="group-info">
-                              <h4>基础套餐默认每秒 5 个请求数，若有额外需求，可增加额外每秒请求数。</h4>
-                          </div>
-                          <div class="form-group">
-                            <label for="package">套餐</label>
-                            <select class="form-control" id="package" required oninput="calculate()">
-                                {% for cell in product_package %}
-                                    <option value="{{ cell.id }}">{{ cell }}</option>
-                                {% endfor %}
-                            </select>
-                          </div>
-                          <div class="form-group">
-                            <label for="additional_concurrency">额外每秒请求数</label>
-                            <input type="number" class="form-control" id="additional_concurrency" autocomplete="off" min="0" max="100" maxlength="4" value="0" required oninput="calculate()">
-                          </div>
-                          <div class="form-group">
-                            <label for="period">购买周期</label>
-                            <input type="number" class="form-control" id="period" autocomplete="off" min="1" max="24" maxlength="2" value="1" required oninput="calculate()">
-                          </div>
-                          <div class="form-group">
-                            <label for="num">通道数</label>
-                            <input type="number" class="form-control" id="num" autocomplete="off" min="1" max="1000" maxlength="4" value="1" required oninput="calculate()">
-                          </div>
-                          <div class="total_money">
-                              <span>总金额：</span>
-                              <span class="text_money"><i class="fa fa-cny"></i> <span id="money">{{ product_package.first.price }}</span></span>
-                          </div>
-                      </div>
-                      <div class="modal-footer">
-                          <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
-                          <button type="submit" class="btn btn-primary">购买</button>
-                      </div>
-                  </form>
-                </div>
-              </div>
-          </div>
-
       </div>
     </div>
 </section>
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">选购{{ product.name }}通道</h4>
+      </div>
+      <form id="buy-form" method="post">
+          {% csrf_token %}
+          <div class="modal-body">
+              <div class="group-info">
+                  <h4>基础套餐默认每秒 5 个请求数，若有额外需求，可增加额外每秒请求数。</h4>
+              </div>
+              <div class="form-group">
+                <label for="package">套餐</label>
+                <select class="form-control" id="package" required oninput="calculate()">
+                    <option></option>
+                    {% for cell in product_package %}
+                        <option value="{{ cell.id }}">{{ cell }}</option>
+                    {% endfor %}
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="additional_concurrency">额外每秒请求数</label>
+                <input type="number" class="form-control" id="additional_concurrency" autocomplete="off" min="0" max="100" maxlength="4" value="0" required oninput="calculate()">
+              </div>
+              <div class="form-group">
+                <label for="period">购买周期</label>
+                <input type="number" class="form-control" id="period" autocomplete="off" min="1" max="24" maxlength="2" value="1" required oninput="calculate()">
+              </div>
+              <div class="form-group">
+                <label for="num">通道数</label>
+                <input type="number" class="form-control" id="num" autocomplete="off" min="1" max="1000" maxlength="4" value="1" required oninput="calculate()">
+              </div>
+              <div class="total_money">
+                  <span>总金额：</span>
+                  <span class="text_money"><i class="fa fa-cny"></i> <span id="money">0.0</span></span>
+              </div>
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+              <button type="submit" class="btn btn-primary">购买</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="ModalRenew" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">{{ product.name }}通道续费</h4>
+      </div>
+      <form id="renew-form" method="post">
+          {% csrf_token %}
+          <div class="modal-body">
+              <div class="group-info">
+                  <h4>基础套餐默认每秒 5 个请求数。</h4>
+              </div>
+              <div class="form-group">
+                <label for="package">套餐</label>
+                <select class="form-control" id="package" required oninput="calculate()">
+                    <option></option>
+                    {% for cell in product_package %}
+                        <option value="{{ cell.id }}">{{ cell }}</option>
+                    {% endfor %}
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="additional_concurrency">额外每秒请求数</label>
+                <input type="number" class="form-control" id="additional_concurrency" autocomplete="off" min="0" max="100" maxlength="4" value="" required oninput="calculate()" readonly>
+              </div>
+              <div class="form-group">
+                <label for="period">续费周期</label>
+                <input type="number" class="form-control" id="period" autocomplete="off" min="1" max="24" maxlength="2" value="1" required oninput="calculate()">
+              </div>
+              <div class="form-group">
+                <label for="num">通道数</label>
+                <input type="number" class="form-control" id="num" autocomplete="off" min="1" max="1000" maxlength="4" value="1" required oninput="calculate()" readonly>
+              </div>
+              <div class="total_money">
+                  <span>总金额：</span>
+                  <span class="text_money"><i class="fa fa-cny"></i> <span id="money">0.0</span></span>
+              </div>
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+              <button type="submit" class="btn btn-primary">续费</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="ModalUpgrade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">{{ product.name }}通道升级</h4>
+      </div>
+      <form id="upgrade-form" method="post">
+          {% csrf_token %}
+          <div class="modal-body">
+              <div class="group-info">
+                  <h4>基础套餐默认每秒 5 个请求数。</h4>
+              </div>
+              <div class="form-group">
+                <label for="concurrency">现有每秒请求数</label>
+                <input type="number" class="form-control" id="concurrency" autocomplete="off" min="0" max="100" maxlength="4" value="" required readonly>
+              </div>
+              <div class="form-group">
+                <label for="price">有效期内每秒请求数价格</label>
+                <input type="text" class="form-control" id="price" autocomplete="off" value="" required readonly>
+              </div>
+              <div class="form-group">
+                <label for="new_additional_concurrency">新增每秒请求数</label>
+                <input type="number" class="form-control" id="new_additional_concurrency" autocomplete="off" min="1" max="100" maxlength="4" value="0" required oninput="calculate2()">
+              </div>
+              <div class="total_money">
+                  <span>总金额：</span>
+                  <span class="text_money"><i class="fa fa-cny"></i> <span id="money">0.00</span></span>
+              </div>
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+              <button type="submit" class="btn btn-primary">升级</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block script %}
@@ -118,14 +204,25 @@
 <script src="{% static 'AdminLTE-2.4.18/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>
 <script>
 function calculate(){
-    var package_text = $('#package option:selected').text(),
-        additional_concurrency = Number($('#additional_concurrency').val()),
-        period = Number($('#period').val()),
-        num = Number($('#num').val());
-    var price = /基础（(.*?)元/.exec(package_text)[1].trim();
-    var additional_concurrency_price = /额外每秒请求数（(.*?)元/.exec(package_text)[1].trim();
-    var total_money = (Number(price) + Number(additional_concurrency_price) * additional_concurrency) * period * num;
-    $('#money').text(total_money.toFixed(1));
+    var package_text = $('.modal.in #package option:selected').text(),
+        additional_concurrency = Number($('.modal.in #additional_concurrency').val()),
+        period = Number($('.modal.in #period').val()),
+        num = Number($('.modal.in #num').val());
+    if (package_text) {
+        var price = /基础（(.*?)元/.exec(package_text)[1].trim();
+        var additional_concurrency_price = /额外每秒请求数（(.*?)元/.exec(package_text)[1].trim();
+        var total_money = (Number(price) + Number(additional_concurrency_price) * additional_concurrency) * period * num;
+        $('.modal.in #money').text(total_money.toFixed(2));
+    }
+    else {
+        $('.modal.in #money').text(0.00);
+    }
+}
+function calculate2(){
+    var additional_concurrency = Number($('.modal.in #price').val()),
+        period = Number($('.modal.in #new_additional_concurrency').val());
+    var total_money = period * additional_concurrency;
+    $('.modal.in #money').text(total_money.toFixed(2));
 }
 </script>
 <script>
@@ -194,7 +291,8 @@ $(function () {
             {
                 "title" : "操作",
                 "render": function (data, type, row) {
-                    return '<button class="btn btn-primary btn-xs" type="button">续费</button><button class="btn btn-primary btn-xs" style="margin-left: 10px" type="button">升级</button>'
+                    return '<button class="btn btn-primary btn-xs" type="button" data-toggle="modal" data-target="#ModalRenew" data-channel_id=' + row['id'] + ' data-concurrency=' + row['concurrency'] + '>续费</button>' +
+                           '<button style="margin-left: 10px" class="btn btn-primary btn-xs" type="button" data-toggle="modal" data-target="#ModalUpgrade" data-channel_id=' + row['id'] + ' data-concurrency=' + row['concurrency'] + ' data-expiration_time=\'' + row['expiration_time'] + '\'>升级</button>'
                 },
                 "class" : "text-center",
                 "width": "100"
@@ -204,11 +302,46 @@ $(function () {
 });
 </script>
 <script>
+var channel_id = null;
+$('#ModalRenew').on('show.bs.modal', function (event) {
+  var button = $(event.relatedTarget);
+  channel_id = button.data('channel_id');
+  var additional_concurrency = button.data('concurrency') - 5;
+  var modal = $(this);
+  modal.find('#additional_concurrency').val(additional_concurrency);
+});
+$('#ModalUpgrade').on('show.bs.modal', function (event) {
+  var button = $(event.relatedTarget);
+  channel_id = button.data('channel_id');
+  var concurrency = button.data('concurrency');
+  var expiration_time = button.data('expiration_time');
+  var modal = $(this);
+  modal.find('#concurrency').val(concurrency);
+
+  var interval = (new Date(expiration_time) - new Date())/1000/60/60/24;
+  var obj = [1/24, 1, 7, 30, 90, 365];
+  var price_list = [];
+  {% for cell in product_package %}
+  price_list.push({{ cell.additional_concurrency_price }});
+  {% endfor %}
+  for(var i in price_list) {
+      if (interval < obj[i]){
+          var price = price_list[i] * interval / obj[i];
+          break
+      }
+  }
+  if (!price){
+      price = price_list[5] * interval / obj[5];
+  }
+  modal.find('#price').val(price.toFixed(2));
+})
+</script>
+<script>
 $('#buy-form').submit(function () {
-    var product_package_id = $('#package').val(),
-        additional_concurrency = $('#additional_concurrency').val(),
-        period = $('#period').val(),
-        num = $('#num').val();
+    var product_package_id = $('#buy-form #package').val(),
+        additional_concurrency = $('#buy-form #additional_concurrency').val(),
+        period = $('#buy-form #period').val(),
+        num = $('#buy-form #num').val();
     var data = {product_package_id: product_package_id, additional_concurrency: additional_concurrency, period: period, number: num};
     $.ajax({
         url: "{% url "order_place" %}",
@@ -233,5 +366,59 @@ $('#buy-form').submit(function () {
     });
     return false
 });
+$('#renew-form').submit(function () {
+    var product_package_id = $('#renew-form #package').val(),
+        period = $('#renew-form #period').val();
+    var data = {product_package_id: product_package_id, channel_id: channel_id, period: period};
+    $.ajax({
+        url: "{% url "channel_renew" %}",
+        type: "POST",
+        data: JSON.stringify(data),
+        dataType: "json",
+        contentType:"application/json;charset=utf-8",
+        beforeSend: function(xhr, settings) {
+            xhr.setRequestHeader("X-CSRFToken", $('[name="csrfmiddlewaretoken"]').val());
+        },
+        success: function (result) {
+            if (result['code'] === 0) {
+                window.location.href = '/order/details/' + result['data']['order_id'];
+            }
+            else {
+                alert(result['message']);
+            }
+        },
+        error: function () {
+            alert("服务器异常");
+        }
+    });
+    return false
+  });
+$('#upgrade-form').submit(function () {
+    var new_additional_concurrency = $('#upgrade-form #new_additional_concurrency').val();
+    var price = $('#upgrade-form #price').val();
+    var data = {price: price, channel_id: channel_id, new_additional_concurrency: new_additional_concurrency};
+    $.ajax({
+        url: "{% url "channel_upgrade" %}",
+        type: "POST",
+        data: JSON.stringify(data),
+        dataType: "json",
+        contentType:"application/json;charset=utf-8",
+        beforeSend: function(xhr, settings) {
+            xhr.setRequestHeader("X-CSRFToken", $('[name="csrfmiddlewaretoken"]').val());
+        },
+        success: function (result) {
+            if (result['code'] === 0) {
+                window.location.href = '/order/details/' + result['data']['order_id'];
+            }
+            else {
+                alert(result['message']);
+            }
+        },
+        error: function () {
+            alert("服务器异常");
+        }
+    });
+    return false
+  });
 </script>
 {% endblock %}

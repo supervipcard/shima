@@ -47,6 +47,7 @@
             <br/>
             <div class="sub-title"><h5>商品概况</h5></div>
             <table class="table-border">
+                {% if order.transaction_type != 4 %}
                 <tr>
                     <td class="col-lg-4">
                         <span class="name">产品： </span>
@@ -71,6 +72,18 @@
                         <span class="value">{{ order_product.additional_concurrency }}</span>
                     </td>
                 </tr>
+                {% else %}
+                <tr>
+                    <td class="col-lg-4">
+                        <span class="name">产品： </span>
+                        <span class="value">{{ order_product.channel.product.name }}</span>
+                    </td>
+                    <td class="col-lg-4">
+                        <span class="name">新增每秒请求数： </span>
+                        <span class="value">{{ order_product.new_additional_concurrency }}</span>
+                    </td>
+                </tr>
+                {% endif %}
             </table>
             {% endif %}
             <div class="total_money">

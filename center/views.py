@@ -78,7 +78,12 @@ class OrderDetails(View):
     @method_decorator(login_required)
     def get(self, request, pk):
         order = Order.objects.get(order_id=pk)
-        order_product = OrderProduct.objects.get(order=order) if order.transaction_type != 1 else None
+        if order.transaction_type == 1:
+            order_product = None
+        elif order.transaction_type == 2:
+            order_product = OrderProduct.objects.get(order=order)
+        else:
+            order_product = SpecialOrderProduct.objects.get(order=order)
         order_url = AliPayModule.pay(order.order_id, order.amount) if order.pay_status == 1 else None
         return render(request, 'order_details.html', {'order': order, 'order_product': order_product, 'order_url': order_url})
 
@@ -155,6 +160,68 @@ class WalletTopUp(View):
             return JsonResponse({'code': 1001, 'message': '请求参数异常'})
 
 
+class RenewForm(Form):
+    channel_id = fields.CharField()
+    product_package_id = fields.CharField()
+    period = fields.CharField()
+
+
+class Renew(View):
+    @method_decorator(login_required)
+    def post(self, request):
+        form = RenewForm(json.loads(request.body))
+        if form.is_valid():
+            product_package_id = form.cleaned_data['product_package_id']
+            period = form.cleaned_data['period']
+            channel_id = form.cleaned_data['channel_id']
+
+            product_package = ProductPackage.objects.get(id=product_package_id)
+            channel = InterfaceChannel.objects.get(id=channel_id)
+            additional_concurrency = channel.concurrency-product_package.default_concurrency
+
+            user = request.user
+            order_id = "{time_str}{userid}{ranstr}".format(time_str=time.strftime("%Y%m%d%H%M%S"), userid=request.user.id, ranstr=random.randint(10000, 99999))
+            amount = product_package.price * int(period) + product_package.additional_concurrency_price * additional_concurrency
+            order = Order(user=user, order_id=order_id, transaction_type=3, amount=amount)
+            order.save()
+            order_product = SpecialOrderProduct(order=order, product_package=product_package, period=period, additional_concurrency=additional_concurrency, channel=channel)
+            order_product.save()
+            controller.countdown(order_id)
+            return JsonResponse({"code": 0, "message": '下单成功', 'data': {'order_id': order_id}})
+        else:
+            return JsonResponse({'code': 1001, 'message': '请求参数异常'})
+
+
+class UpgradeForm(Form):
+    channel_id = fields.CharField()
+    new_additional_concurrency = fields.CharField()
+    price = fields.CharField()
+
+
+class Upgrade(View):
+    @method_decorator(login_required)
+    def post(self, request):
+        form = UpgradeForm(json.loads(request.body))
+        if form.is_valid():
+            new_additional_concurrency = form.cleaned_data['new_additional_concurrency']
+            channel_id = form.cleaned_data['channel_id']
+            price = form.cleaned_data['price']
+
+            channel = InterfaceChannel.objects.get(id=channel_id)
+
+            user = request.user
+            order_id = "{time_str}{userid}{ranstr}".format(time_str=time.strftime("%Y%m%d%H%M%S"), userid=request.user.id, ranstr=random.randint(10000, 99999))
+            amount = float(price) * int(new_additional_concurrency)
+            order = Order(user=user, order_id=order_id, transaction_type=4, amount=amount)
+            order.save()
+            order_product = SpecialOrderProduct(order=order, new_additional_concurrency=new_additional_concurrency, channel=channel)
+            order_product.save()
+            controller.countdown(order_id)
+            return JsonResponse({"code": 0, "message": '下单成功', 'data': {'order_id': order_id}})
+        else:
+            return JsonResponse({'code': 1001, 'message': '请求参数异常'})
+
+
 class AliPayAPIView(View):
     def get(self, request):
         data = request.GET.dict()
@@ -194,6 +261,20 @@ class AliPayAPIView(View):
                 for i in range(order_product.number):
                     channel = InterfaceChannel(user=user, product=product_package.product, concurrency=concurrency, creation_time=creation_time, expiration_time=expiration_time)
                     channel.save()
+            elif transaction_type == 3:
+                order_product = SpecialOrderProduct.objects.get(order=order)
+                product_package = order_product.product_package
+                channel = order_product.channel
+                total_hours = {1: 1 / 24, 2: 1, 3: 7, 4: 30, 5: 90, 6: 365}.get(product_package.time_limit) * 24 * order_product.period
+                channel.renewal_time = datetime.now()
+                channel.expiration_time = channel.expiration_time + timedelta(hours=total_hours)
+                channel.save()
+            elif transaction_type == 4:
+                order_product = SpecialOrderProduct.objects.get(order=order)
+                channel = order_product.channel
+                channel.concurrency = channel.concurrency + order_product.new_additional_concurrency
+                channel.save()
+
             return HttpResponse('success')
         else:
             return HttpResponse('failure')
