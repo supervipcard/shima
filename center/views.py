@@ -80,10 +80,8 @@ class OrderDetails(View):
         order = Order.objects.get(order_id=pk)
         if order.transaction_type == 1:
             order_product = None
-        elif order.transaction_type == 2:
-            order_product = OrderProduct.objects.get(order=order)
         else:
-            order_product = SpecialOrderProduct.objects.get(order=order)
+            order_product = OrderProduct.objects.get(order=order)
         order_url = AliPayModule.pay(order.order_id, order.amount) if order.pay_status == 1 else None
         return render(request, 'order_details.html', {'order': order, 'order_product': order_product, 'order_url': order_url})
 
@@ -184,7 +182,7 @@ class Renew(View):
             amount = product_package.price * int(period) + product_package.additional_concurrency_price * additional_concurrency
             order = Order(user=user, order_id=order_id, transaction_type=3, amount=amount)
             order.save()
-            order_product = SpecialOrderProduct(order=order, product_package=product_package, period=period, additional_concurrency=additional_concurrency, channel=channel)
+            order_product = OrderProduct(order=order, product_package=product_package, channel=channel, period=period)
             order_product.save()
             controller.countdown(order_id)
             return JsonResponse({"code": 0, "message": '下单成功', 'data': {'order_id': order_id}})
@@ -214,7 +212,7 @@ class Upgrade(View):
             amount = float(price) * int(new_additional_concurrency)
             order = Order(user=user, order_id=order_id, transaction_type=4, amount=amount)
             order.save()
-            order_product = SpecialOrderProduct(order=order, new_additional_concurrency=new_additional_concurrency, channel=channel)
+            order_product = OrderProduct(order=order, channel=channel, new_additional_concurrency=new_additional_concurrency)
             order_product.save()
             controller.countdown(order_id)
             return JsonResponse({"code": 0, "message": '下单成功', 'data': {'order_id': order_id}})
@@ -262,7 +260,7 @@ class AliPayAPIView(View):
                     channel = InterfaceChannel(user=user, product=product_package.product, concurrency=concurrency, creation_time=creation_time, expiration_time=expiration_time)
                     channel.save()
             elif transaction_type == 3:
-                order_product = SpecialOrderProduct.objects.get(order=order)
+                order_product = OrderProduct.objects.get(order=order)
                 product_package = order_product.product_package
                 channel = order_product.channel
                 total_hours = {1: 1 / 24, 2: 1, 3: 7, 4: 30, 5: 90, 6: 365}.get(product_package.time_limit) * 24 * order_product.period
@@ -270,7 +268,7 @@ class AliPayAPIView(View):
                 channel.expiration_time = channel.expiration_time + timedelta(hours=total_hours)
                 channel.save()
             elif transaction_type == 4:
-                order_product = SpecialOrderProduct.objects.get(order=order)
+                order_product = OrderProduct.objects.get(order=order)
                 channel = order_product.channel
                 channel.concurrency = channel.concurrency + order_product.new_additional_concurrency
                 channel.save()

@@ -46,8 +46,8 @@
             {% if order_product %}
             <br/>
             <div class="sub-title"><h5>商品概况</h5></div>
+            {% if order.transaction_type == 2 %}
             <table class="table-border">
-                {% if order.transaction_type != 4 %}
                 <tr>
                     <td class="col-lg-4">
                         <span class="name">产品： </span>
@@ -72,19 +72,48 @@
                         <span class="value">{{ order_product.additional_concurrency }}</span>
                     </td>
                 </tr>
-                {% else %}
+            </table>
+            {% elif order.transaction_type == 3 %}
+            <table class="table-border">
+                <tr>
+                    <td class="col-lg-4">
+                        <span class="name">产品： </span>
+                        <span class="value">{{ order_product.product_package.product.name }}</span>
+                    </td>
+                    <td class="col-lg-4">
+                        <span class="name">续费通道ID： </span>
+                        <span class="value">{{ order_product.channel.id }}</span>
+                    </td>
+                    <td class="col-lg-4">
+                        <span class="name">套餐： </span>
+                        <span class="value">{{ order_product.product_package }}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-lg-4">
+                        <span class="name">周期： </span>
+                        <span class="value">{{ order_product.period }}</span>
+                    </td>
+                </tr>
+            </table>
+            {% elif order.transaction_type == 4 %}
+            <table class="table-border">
                 <tr>
                     <td class="col-lg-4">
                         <span class="name">产品： </span>
                         <span class="value">{{ order_product.channel.product.name }}</span>
                     </td>
                     <td class="col-lg-4">
+                        <span class="name">升级通道ID： </span>
+                        <span class="value">{{ order_product.channel.id }}</span>
+                    </td>
+                    <td class="col-lg-4">
                         <span class="name">新增每秒请求数： </span>
                         <span class="value">{{ order_product.new_additional_concurrency }}</span>
                     </td>
                 </tr>
-                {% endif %}
             </table>
+            {% endif %}
             {% endif %}
             <div class="total_money">
                 {% if order.pay_status == 1 %}

@@ -76,17 +76,6 @@ class Order(models.Model):
     add_time = models.DateTimeField(verbose_name='下单时间', auto_now_add=True)
 
 
-class OrderProduct(models.Model):
-    """
-    订单内的产品详情
-    """
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, verbose_name='订单')
-    product_package = models.ForeignKey(ProductPackage, on_delete=models.PROTECT, verbose_name='产品套餐包')
-    period = models.IntegerField(verbose_name='周期', default=1)
-    number = models.IntegerField(verbose_name='数量', default=1)
-    additional_concurrency = models.IntegerField(verbose_name='额外并发数', default=0)
-
-
 def generate_access_token():
     return base64.b64encode(os.urandom(48)).decode('utf-8')
 
@@ -104,14 +93,14 @@ class InterfaceChannel(models.Model):
     renewal_time = models.DateTimeField(verbose_name='续费时间', null=True, blank=True)
 
 
-class SpecialOrderProduct(models.Model):
+class OrderProduct(models.Model):
     """
     订单内的产品详情
     """
     order = models.ForeignKey(Order, on_delete=models.CASCADE, verbose_name='订单')
     product_package = models.ForeignKey(ProductPackage, on_delete=models.PROTECT, verbose_name='产品套餐包', null=True, blank=True)
     channel = models.ForeignKey(InterfaceChannel, on_delete=models.PROTECT, verbose_name='接口通道', null=True, blank=True)
-    period = models.IntegerField(verbose_name='周期', null=True, blank=True)
-    number = models.IntegerField(verbose_name='数量', default=1)
-    additional_concurrency = models.IntegerField(verbose_name='额外并发数', null=True, blank=True)
+    period = models.IntegerField(verbose_name='新购/续费周期', null=True, blank=True)
+    number = models.IntegerField(verbose_name='新购数量', null=True, blank=True)
+    additional_concurrency = models.IntegerField(verbose_name='新购额外并发数', null=True, blank=True)
     new_additional_concurrency = models.IntegerField(verbose_name='升级新增并发数', null=True, blank=True)
