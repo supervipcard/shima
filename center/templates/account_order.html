@@ -48,6 +48,7 @@
         <h1 class="panel-title">我的订单</h1>
       </div>
       <div class="panel-body">
+          <button class="btn btn-danger btn-cancel" type="button"><i class="fa fa-times-circle"></i> 作废</button>
           <table id="assets_table" class="table table-bordered table-striped">
 
           </table>
@@ -93,6 +94,18 @@ $(function () {
       //    "dataSrc": "results",
       //},
       "columns": [
+          {
+              "title": '<input type="checkbox" id="checkall" onclick="check_all(this)">',
+              "class" : "text-center",
+              "render": function (data, type, row) {
+                  if (row['pay_status'] === 1) {
+                      return '<input type="checkbox" id="checkchild" value="' + row['order_id'] + '">'
+                  }
+                  else{
+                      return '<input type="checkbox" disabled>'
+                  }
+              }
+          },
             {
                 "title" : "订单编号",
                 "data": "order_id",
@@ -137,5 +150,42 @@ $(function () {
         ]
     });
 });
+</script>
+<script>
+function check_all(obj) {
+    $("input[id='checkchild']").each(function () {
+        $(this).prop('checked', obj.checked);
+    });
+}
+
+$(".btn-cancel").click(function () {
+    var target_boxes = [];
+    $("input[id='checkchild']:checked").each(function () {
+        target_boxes.push($(this).val())
+    });
+    if (target_boxes.length === 0){
+        return
+    }
+    var data = {order_id_list: target_boxes};
+    $.ajax({
+        url: "{% url "order_cancel" %}",
+        type: "POST",
+        data: JSON.stringify(data),
+        dataType: "json",
+        contentType:"application/json;charset=utf-8",
+        success: function (result) {
+            if (result['code'] === 0) {
+                window.location.reload()
+            }
+            else {
+                alert(result['message']);
+            }
+        },
+        error: function () {
+            alert("服务器异常");
+        }
+    });
+    return false
+})
 </script>
 {% endblock %}

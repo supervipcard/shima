@@ -28,6 +28,7 @@ urlpatterns = [
     path('alipay/return/', AliPayAPIView.as_view(), name='alipay_return'),
     path('order/place/', OrderPlace.as_view(), name='order_place'),
     path('order/list/', OrderListAPIView.as_view(), name='order_list'),
+    path('order/cancel/', OrderCancel.as_view(), name='order_cancel'),
     path('channel/list/', ChannelListAPIView.as_view(), name='channel_list'),
     path('wallet/top-up/', WalletTopUp.as_view(), name='wallet_top_up'),
     path('channel/renew/', Renew.as_view(), name='channel_renew'),

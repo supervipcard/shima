@@ -138,6 +138,26 @@ class OrderPlace(View):
             return JsonResponse({'code': 1001, 'message': '请求参数异常'})
 
 
+class OrderCancel(View):
+    @method_decorator(login_required)
+    def post(self, request):
+        form = json.loads(request.body)
+        if form.get('order_id_list'):
+            order_id_list = form['order_id_list']
+            for order_id in order_id_list:
+                order = Order.objects.get(order_id=order_id)
+                order.pay_status = 4
+                order.save()
+                AliPayModule.close(order_id)
+            return JsonResponse({"code": 0, "message": '订单删除成功'})
+        else:
+            return JsonResponse({'code': 1001, 'message': '请求参数异常'})
+
+    @csrf_exempt
+    def dispatch(self, *args, **kwargs):
+        return super(OrderCancel, self).dispatch(*args, **kwargs)
+
+
 class WalletTopUpForm(Form):
     amount = fields.CharField()
 
