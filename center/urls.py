@@ -33,4 +33,6 @@ urlpatterns = [
     path('wallet/top-up/', WalletTopUp.as_view(), name='wallet_top_up'),
     path('channel/renew/', Renew.as_view(), name='channel_renew'),
     path('channel/upgrade/', Upgrade.as_view(), name='channel_upgrade'),
+
+    path('api/geetest/crack/', GeetestAPIView.as_view(), name='geetest_crack'),
 ]

@@ -104,3 +104,15 @@ class OrderProduct(models.Model):
     number = models.IntegerField(verbose_name='新购数量', null=True, blank=True)
     additional_concurrency = models.IntegerField(verbose_name='新购额外并发数', null=True, blank=True)
     new_additional_concurrency = models.IntegerField(verbose_name='升级新增并发数', null=True, blank=True)
+
+
+class IdentificationRecord(models.Model):
+    """
+    极验识别接口调用记录
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='用户')
+    gt = models.CharField(verbose_name='gt', max_length=32)
+    challenge = models.CharField(verbose_name='challenge', max_length=32, null=True, blank=True)
+    referer = models.CharField(verbose_name='referer', max_length=512)
+    result_code = models.IntegerField(verbose_name='调用结果')
+    add_time = models.DateTimeField(verbose_name='调用时间', auto_now_add=True)

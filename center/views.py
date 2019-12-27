@@ -22,7 +22,8 @@ from users.models import *
 from .serializers import *
 from .filters import *
 from .alipay_utils import AliPayModule
-from.redis_expired import TimeoutController
+from .redis_expired import TimeoutController
+from geetest_cracking.geetest import GeetestCrack
 
 controller = TimeoutController()
 
@@ -60,8 +61,8 @@ class AccountOrder(View):
     @method_decorator(login_required)
     def get(self, request):
         user = request.user
-        orders = Order.objects.filter(user=user)
-        return render(request, 'account_order.html', {'user': user, 'orders': orders})
+        # orders = Order.objects.filter(user=user)
+        return render(request, 'account_order.html', {'user': user})
 
 
 class Service(View):
@@ -300,3 +301,39 @@ class AliPayAPIView(View):
     @csrf_exempt
     def dispatch(self, *args, **kwargs):
         return super(AliPayAPIView, self).dispatch(*args, **kwargs)
+
+
+class GeetestForm(Form):
+    access_token = fields.CharField()
+    gt = fields.CharField()
+    challenge = fields.CharField(required=False)
+    referer = fields.CharField()
+
+
+class GeetestAPIView(View):
+    def post(self, request):
+        form = GeetestForm(request.POST)
+        if form.is_valid():
+            access_token = form.cleaned_data['access_token']
+            gt = form.cleaned_data['gt']
+            challenge = form.cleaned_data['challenge']
+            referer = form.cleaned_data['referer']
+
+            try:
+                channel = InterfaceChannel.objects.get(access_token=access_token)
+            except InterfaceChannel.DoesNotExist:
+                return JsonResponse({'code': 1002, 'message': 'access_token认证失败'})
+
+            if channel.expiration_time < datetime.now():
+                return JsonResponse({'code': 1003, 'message': '接口通道已过期'})
+
+            result = GeetestCrack(challenge, gt, referer).start()
+            record = IdentificationRecord(user=channel.user, challenge=challenge, gt=gt, referer=referer, result_code=result['code'])
+            record.save()
+            return JsonResponse(result)
+        else:
+            return JsonResponse({'code': 1001, 'message': '请求参数异常'})
+
+    @csrf_exempt
+    def dispatch(self, *args, **kwargs):
+        return super(GeetestAPIView, self).dispatch(*args, **kwargs)
