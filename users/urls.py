@@ -15,21 +15,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from rest_framework_jwt.views import obtain_jwt_token
+
 from .views import *
 
 urlpatterns = [
-    path('sign_in/', SignInView.as_view(), name='sign_in'),
-    path('sign_up/', SignUpView.as_view(), name='sign_up'),
-    path('sendsms/', SendSMS.as_view(), name='sendsms'),
-    path('captcha/', CreateCaptcha.as_view(), name='captcha'),
-
-    path('login/', Login.as_view(), name='login'),
-    path('logout/', Logout.as_view(), name='logout'),
-    path('register/', Register.as_view(), name='register'),
-
-    path('forget_password/', ForgetPasswordView.as_view(), name='forget_password'),
-    path('forget_password2/', ForgetPasswordView2.as_view(), name='forget_password2'),
-    path('verify_phone/', VerifyPhone.as_view(), name='verify_phone'),
-    path('reset_password/', ResetPassword.as_view(), name='reset_password'),
-    path('change_password/', ChangePassword.as_view(), name='change_password'),
+    path('smscode/', SMSCode.as_view()),
+    path('login/', obtain_jwt_token),
 ]

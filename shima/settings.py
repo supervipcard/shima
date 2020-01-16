@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/2.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.2/ref/settings/
 """
-
+import datetime
 import os
 import pymysql
 
@@ -38,12 +38,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'center',
+    # 'console',
     'users',
     'xadmin',
     'crispy_forms',
     'rest_framework',
     'django_filters',
+    'rest_framework_jwt',
 ]
 
 MIDDLEWARE = [
@@ -61,7 +62,7 @@ ROOT_URLCONF = 'shima.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -70,7 +71,6 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.media',
-                'center.views.global_setting',
             ],
         },
     },
@@ -93,7 +93,7 @@ pymysql.install_as_MySQLdb()
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'shima',
+        'NAME': 'vue_shima',
         'USER': 'xiangchen',
         'PASSWORD': 'Pl1996317',
         'HOST': 'localhost',
@@ -140,9 +140,6 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'static'),
-)
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -153,12 +150,10 @@ AUTHENTICATION_BACKENDS = (
     'users.views.CustomBackend',
 )
 
-LOGIN_URL = '/sign_in/'
-
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://localhost:6379/6",
+        "LOCATION": "redis://localhost:6379/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "PASSWORD": "test123",
@@ -166,19 +161,14 @@ CACHES = {
     }
 }
 
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # 引擎
-SESSION_COOKIE_NAME = "sessionid"  # Session的cookie保存在浏览器上时的key，即：sessionid＝随机字符串
-SESSION_COOKIE_PATH = "/"  # Session的cookie保存的路径
-SESSION_COOKIE_DOMAIN = None  # Session的cookie保存的域名
-SESSION_COOKIE_SECURE = False  # 是否Https传输cookie
-SESSION_COOKIE_HTTPONLY = True  # 是否Session的cookie只支持http传输
-SESSION_COOKIE_AGE = 604800  # Session的cookie失效日期
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # 是否关闭浏览器使得Session过期
-SESSION_SAVE_EVERY_REQUEST = False  # 是否每次请求都保存Session，默认修改之后才保存
-
 REST_FRAMEWORK = {
     # 分页
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     # 每页显示的个数
     'PAGE_SIZE': 10,
+}
+
+JWT_AUTH = {
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=7),  # 也可以设置seconds=20
+    'JWT_AUTH_HEADER_PREFIX': 'JWT',                     # 设置Authorization的前缀，如 {Authorization: JWT <your_token>}
 }

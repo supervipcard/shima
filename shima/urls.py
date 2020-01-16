@@ -17,11 +17,19 @@ from django.contrib import admin
 from django.conf import settings
 from django.urls import path, include
 from django.views import static
+from rest_framework import routers
 import xadmin
+
+from users.views import UserViewSet
+
+router = routers.DefaultRouter()
+router.register(r'users', UserViewSet)
 
 urlpatterns = [
     path('media/<path:path>', static.serve, {'document_root': settings.MEDIA_ROOT}),
     path('xadmin/', xadmin.site.urls),
+    path('api-auth/', include('rest_framework.urls')),  # 增加REST框架的登录和注销视图
+    path('', include(router.urls)),
     path('', include('users.urls')),
-    path('', include('center.urls')),
+    # path('', include('console.urls')),
 ]
