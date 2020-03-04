@@ -21,9 +21,14 @@ from rest_framework import routers
 import xadmin
 
 from users.views import UserViewSet
+from console.views import ProductViewSet, ProductPackageViewSet, OrderViewSet, OrderGoodsViewSet
 
 router = routers.DefaultRouter()
 router.register(r'users', UserViewSet)
+router.register(r'product', ProductViewSet)
+router.register(r'product_package', ProductPackageViewSet)
+router.register(r'order', OrderViewSet, base_name="order")  # 加 base_name 避免因没有 queryset 而报错
+router.register(r'order_goods', OrderGoodsViewSet, base_name="order_goods")
 
 urlpatterns = [
     path('media/<path:path>', static.serve, {'document_root': settings.MEDIA_ROOT}),
@@ -31,5 +36,5 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls')),  # 增加REST框架的登录和注销视图
     path('', include(router.urls)),
     path('', include('users.urls')),
-    # path('', include('console.urls')),
+    path('', include('console.urls')),
 ]

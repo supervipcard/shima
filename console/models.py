@@ -1,6 +1,5 @@
 import os
 import base64
-
 from django.contrib.auth import get_user_model
 from django.db import models
 
@@ -14,6 +13,13 @@ class Product(models.Model):
     name = models.CharField(verbose_name='产品名称', max_length=10)  # 极验识别、易盾识别
     doc_url = models.URLField(verbose_name='接口文档链接地址', null=True, blank=True)
     is_open = models.BooleanField(verbose_name='是否开放', default=True)
+
+    class Meta:
+        verbose_name = "产品"
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return self.name
 
 
 class ProductPackage(models.Model):
@@ -32,12 +38,15 @@ class ProductPackage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.PROTECT, verbose_name='产品')
     time_limit = models.SmallIntegerField(verbose_name='套餐期限', choices=time_limit_choices)
     price = models.FloatField(verbose_name='套餐单价')
-    default_concurrency = models.IntegerField(verbose_name='默认并发数', default=5)
-    additional_concurrency_price = models.FloatField(verbose_name='额外并发单价')
+    default_concurrency = models.IntegerField(verbose_name='默认每秒请求数')
+    additional_concurrency_price = models.FloatField(verbose_name='额外每秒请求数单价')
+
+    class Meta:
+        verbose_name = "产品套餐包"
+        verbose_name_plural = verbose_name
 
     def __str__(self):
-        return '基础（{price}元 / {time_limit}） + 额外每秒请求数（{additional_concurrency_price}元 / {time_limit}）'.format(
-            price=self.price, additional_concurrency_price=self.additional_concurrency_price, time_limit=dict(self.time_limit_choices)[self.time_limit])
+        return '{}{}包'.format(self.product, dict(self.time_limit_choices)[self.time_limit])
 
 
 class Order(models.Model):
@@ -68,51 +77,58 @@ class Order(models.Model):
     order_id = models.CharField(verbose_name='订单编号', max_length=30, primary_key=True)
     trade_no = models.CharField(verbose_name="支付宝交易号", max_length=100, unique=True, null=True, blank=True)
     transaction_type = models.SmallIntegerField(verbose_name='交易类型', choices=transaction_type_choices)
-    # product_type = models.CharField(verbose_name='产品类型', max_length=10)
     amount = models.FloatField(verbose_name="订单金额")
-    pay_channel = models.SmallIntegerField(verbose_name='支付渠道', choices=pay_channel_choices, default=2)
+    pay_channel = models.SmallIntegerField(verbose_name='支付渠道', choices=pay_channel_choices, null=True, blank=True)
     pay_status = models.SmallIntegerField(verbose_name="订单状态", choices=pay_status_choices, default=1)
     pay_time = models.DateTimeField(verbose_name='支付时间', null=True, blank=True)
     add_time = models.DateTimeField(verbose_name='下单时间', auto_now_add=True)
+
+    class Meta:
+        verbose_name = "订单"
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return self.order_id
+
+
+class OrderGoods(models.Model):
+    """
+    新购订单内的商品详情
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='用户')
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, verbose_name='订单')
+    product_package = models.ForeignKey(ProductPackage, on_delete=models.PROTECT, verbose_name='产品套餐包')
+    period = models.IntegerField(verbose_name='新购周期', default=1)
+    number = models.IntegerField(verbose_name='新购数量', default=1)
+    additional_concurrency = models.IntegerField(verbose_name='额外每秒请求数', default=0)
+
+    class Meta:
+        verbose_name = "新购订单内的商品详情"
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return self.order
 
 
 def generate_access_token():
     return base64.b64encode(os.urandom(48)).decode('utf-8')
 
 
-class InterfaceChannel(models.Model):
+class Service(models.Model):
     """
-    产品接口通道
+    已购买的服务
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='用户')
     product = models.ForeignKey(Product, on_delete=models.PROTECT, verbose_name='产品')
-    access_token = models.CharField(verbose_name='通行秘钥', max_length=64, default=generate_access_token)
-    concurrency = models.IntegerField(verbose_name='并发数')
+    access_token = models.CharField(verbose_name='通行秘钥', max_length=64, default=generate_access_token, unique=True)
+    concurrency = models.IntegerField(verbose_name='每秒请求数')
     creation_time = models.DateTimeField(verbose_name='创建时间')
     expiration_time = models.DateTimeField(verbose_name='到期时间')
     renewal_time = models.DateTimeField(verbose_name='续费时间', null=True, blank=True)
 
+    class Meta:
+        verbose_name = "已购买的服务"
+        verbose_name_plural = verbose_name
 
-class OrderProduct(models.Model):
-    """
-    订单内的产品详情
-    """
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, verbose_name='订单')
-    product_package = models.ForeignKey(ProductPackage, on_delete=models.PROTECT, verbose_name='产品套餐包', null=True, blank=True)
-    channel = models.ForeignKey(InterfaceChannel, on_delete=models.PROTECT, verbose_name='接口通道', null=True, blank=True)
-    period = models.IntegerField(verbose_name='新购/续费周期', null=True, blank=True)
-    number = models.IntegerField(verbose_name='新购数量', null=True, blank=True)
-    additional_concurrency = models.IntegerField(verbose_name='新购额外并发数', null=True, blank=True)
-    new_additional_concurrency = models.IntegerField(verbose_name='升级新增并发数', null=True, blank=True)
-
-
-class IdentificationRecord(models.Model):
-    """
-    极验识别接口调用记录
-    """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='用户')
-    gt = models.CharField(verbose_name='gt', max_length=32)
-    challenge = models.CharField(verbose_name='challenge', max_length=32, null=True, blank=True)
-    referer = models.CharField(verbose_name='referer', max_length=512)
-    result_code = models.IntegerField(verbose_name='调用结果')
-    add_time = models.DateTimeField(verbose_name='调用时间', auto_now_add=True)
+    def __str__(self):
+        return self.id
