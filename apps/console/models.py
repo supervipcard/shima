@@ -129,6 +129,3 @@ class Service(models.Model):
     class Meta:
         verbose_name = "已购买的服务"
         verbose_name_plural = verbose_name
-
-    def __str__(self):
-        return self.id

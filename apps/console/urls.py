@@ -15,11 +15,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from rest_framework_jwt.views import obtain_jwt_token
 
 from .views import *
 
 urlpatterns = [
-    path('smscode/', SMSCode.as_view()),
-    path('login/', obtain_jwt_token),
+    path('alipay/return/', AliPayAPIView.as_view(), name='alipay_return'),
 ]

@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework import views, generics, mixins, viewsets, filters, status, permissions
 from rest_framework.pagination import PageNumberPagination
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
+from rest_framework_jwt.views import *
 
 from .serializers import SMSCodeSerializer, UserRegSerializer, UserDetailSerializer, UserUpdateSerializer
 
@@ -59,7 +60,7 @@ class UserViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.Upd
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        return Response({"code": "20000", "message": ""}, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
@@ -73,7 +74,7 @@ class UserViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.Upd
             # forcibly invalidate the prefetch cache on the instance.
             instance._prefetched_objects_cache = {}
 
-        return Response({"code": "20000", "message": ""})
+        return Response()
 
     def get_object(self):
         return self.request.user
@@ -101,4 +102,22 @@ class SMSCode(views.APIView):
         key = 'smscode:{}'.format(phone)
         redis_client.set(key, code_text)
         redis_client.expire(key, 60*5)
-        return Response({"code": "20000", "message": ""}, status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_201_CREATED)
+
+
+class CustomObtainJSONWebToken(ObtainJSONWebToken):
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.object.get('user') or request.user
+        token = serializer.object.get('token')
+        response_data = jwt_response_payload_handler(token, user, request)
+        response = Response(response_data)
+        if api_settings.JWT_AUTH_COOKIE:
+            expiration = (datetime.utcnow() +
+                          api_settings.JWT_EXPIRATION_DELTA)
+            response.set_cookie(api_settings.JWT_AUTH_COOKIE,
+                                token,
+                                expires=expiration,
+                                httponly=True)
+        return response

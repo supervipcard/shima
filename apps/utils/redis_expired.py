@@ -3,8 +3,8 @@
 """
 import re
 from django_redis import get_redis_connection
-from .models import *
-from .alipay_utils import AliPayModule
+from console.models import *
+from utils.alipay_ import Alipay
 
 
 def callback(msg):
@@ -14,7 +14,7 @@ def callback(msg):
         order = Order.objects.get(order_id=order_id)
         order.pay_status = 3
         order.save()
-        AliPayModule.close(order_id)
+        Alipay.close(order_id)
 
 
 class TimeoutController:
