@@ -1,16 +1,18 @@
 import random
+from datetime import datetime
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.db.models import Q
 from django_redis import get_redis_connection
 from rest_framework.authentication import SessionAuthentication
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import views, generics, mixins, viewsets, filters, status, permissions
 from rest_framework.pagination import PageNumberPagination
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
-from rest_framework_jwt.views import *
+from rest_framework_jwt.views import ObtainJSONWebToken, jwt_response_payload_handler, api_settings
 
-from .serializers import SMSCodeSerializer, UserRegSerializer, UserDetailSerializer, UserUpdateSerializer
+from .serializers import SMSCodeSerializer, UserRegSerializer, UserDetailSerializer, UserUpdateSerializer, ChangePasswordSerializer, ResetPasswordSerializer, CustomJSONWebTokenSerializer
 
 User = get_user_model()
 redis_client = get_redis_connection("default")
@@ -40,7 +42,7 @@ class UserViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.Upd
     authentication_classes = (JSONWebTokenAuthentication, SessionAuthentication)
 
     def get_permissions(self):
-        if self.action in ["retrieve", "update", "partial_update"]:
+        if self.action in ["retrieve", "update", "partial_update", "change_password"]:
             return [permissions.IsAuthenticated()]
         elif self.action == "create":
             return []
@@ -53,31 +55,32 @@ class UserViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.Upd
             return UserRegSerializer
         elif self.action in ["update", "partial_update"]:
             return UserUpdateSerializer
+        elif self.action == 'change_password':
+            return ChangePasswordSerializer
+        elif self.action == 'reset_password':
+            return ResetPasswordSerializer
         return UserDetailSerializer
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-
-        if getattr(instance, '_prefetched_objects_cache', None):
-            # If 'prefetch_related' has been applied to a queryset, we need to
-            # forcibly invalidate the prefetch cache on the instance.
-            instance._prefetched_objects_cache = {}
-
-        return Response()
 
     def get_object(self):
         return self.request.user
+
+    @action(detail=True, methods=['post'])
+    def change_password(self, request, pk=None):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = self.request.user
+        user.set_password(serializer.data['new_password'])
+        user.save()
+        return Response()
+
+    @action(detail=False, methods=['post'])
+    def reset_password(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = User.objects.get(phone=serializer.data['phone'])
+        user.set_password(serializer.data['new_password'])
+        user.save()
+        return Response()
 
 
 class SMSCode(views.APIView):
@@ -106,6 +109,8 @@ class SMSCode(views.APIView):
 
 
 class CustomObtainJSONWebToken(ObtainJSONWebToken):
+    serializer_class = CustomJSONWebTokenSerializer
+
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
