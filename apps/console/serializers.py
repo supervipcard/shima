@@ -31,10 +31,26 @@ class OrderPurchaseSerializer(serializers.ModelSerializer):
     product_package = ProductPackageSerializer(read_only=True)
 
     # 表单字段
-    product_package_id = serializers.IntegerField(write_only=True)
-    period = serializers.IntegerField(default=1, min_value=1, max_value=100)
-    number = serializers.IntegerField(default=1, min_value=1, max_value=100)
-    additional_concurrency = serializers.IntegerField(default=0, min_value=0, max_value=100)
+    product_package_id = serializers.IntegerField(label='产品套餐包ID', write_only=True,
+                                                  error_messages={
+                                                      'required': '套餐包ID不能为空',
+                                                      'invalid': '套餐包ID不合法',
+                                                  })
+    period = serializers.IntegerField(label='新购周期', default=1, min_value=1, max_value=100,
+                                      error_messages={
+                                          'max_value': '新购周期必须小于等于100',
+                                          'min_value': '新购周期必须大于等于1'
+                                      })
+    number = serializers.IntegerField(label='新购数量', default=1, min_value=1, max_value=100,
+                                      error_messages={
+                                          'max_value': '新购数量必须小于等于100',
+                                          'min_value': '新购数量必须大于等于1'
+                                      })
+    additional_concurrency = serializers.IntegerField(label='额外每秒请求数', default=0, min_value=0, max_value=100,
+                                                      error_messages={
+                                                          'max_value': '额外每秒请求数必须小于等于100',
+                                                          'min_value': '额外每秒请求数必须大于等于1'
+                                                      })
 
     def validate(self, attrs):
         product_package_id = attrs['product_package_id']

@@ -1,12 +1,13 @@
 from datetime import datetime, timedelta
-from django.http import HttpResponseForbidden
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework import views, mixins, viewsets, status, permissions
+from rest_framework import views, generics, mixins, viewsets, filters, status, permissions
+from rest_framework.pagination import PageNumberPagination
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
-from .serializers import *
+from .models import *
+from .serializers import ProductSerializer, ProductPackageSerializer, OrderSerializer, OrderPurchaseSerializer, OrderGoodsSerializer, ServiceSerializer
 from utils.alipay_ import Alipay
 from utils.redis_expired import TimeoutController
 from utils.permissions import IsSelf
@@ -27,7 +28,6 @@ class ProductPackageViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 
 class OrderViewSet(mixins.RetrieveModelMixin,
-                   mixins.DestroyModelMixin,
                    mixins.ListModelMixin,
                    viewsets.GenericViewSet):
     authentication_classes = (JSONWebTokenAuthentication, SessionAuthentication)
@@ -48,8 +48,24 @@ class OrderViewSet(mixins.RetrieveModelMixin,
         serializer.save()
         return Response(status=status.HTTP_201_CREATED)
 
+    @action(detail=False, methods=['post'])
+    def delete(self, request):
+        trade_list = request.data.get('tradeNo')
+        if isinstance(trade_list, list):
+            for order_id in trade_list:
+                try:
+                    order = Order.objects.get(order_id=order_id)
+                    order.delete()
+                except Order.DoesNotExist:
+                    return Response({'message': '订单未找到', 'code': 'not_found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response()
+        else:
+            return Response({'message': '参数异常', 'code': 'invalid'}, status=status.HTTP_400_BAD_REQUEST)
 
-class OrderGoodsViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+
+class OrderGoodsViewSet(mixins.RetrieveModelMixin,
+                        mixins.ListModelMixin,
+                        viewsets.GenericViewSet):
     authentication_classes = (JSONWebTokenAuthentication, SessionAuthentication)
     permission_classes = (permissions.IsAuthenticated, IsSelf)
     serializer_class = OrderGoodsSerializer
@@ -76,9 +92,9 @@ class AliPayAPIView(views.APIView):
         sign = data.pop('sign')
         result = Alipay.verify(data, sign)
         if result:
-            return Response('Hello World!')
+            return Response('success')
         else:
-            return HttpResponseForbidden()
+            return Response('failure')
 
     def post(self, request):
         data = request.POST.dict()
