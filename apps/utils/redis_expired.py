@@ -1,5 +1,5 @@
 """
-开启键空间通知：redis-cli config set notify-keyspace-events KEx
+开启键空间通知：redis-cli -a test123 config set notify-keyspace-events KEx
 """
 import re
 from django_redis import get_redis_connection

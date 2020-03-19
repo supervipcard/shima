@@ -6,6 +6,17 @@ from rest_framework.response import Response
 from rest_framework.views import set_rollback
 
 
+def custom_get_full_details(detail):
+    if isinstance(detail, list):
+        return [custom_get_full_details(item) for item in detail][0]
+    elif isinstance(detail, dict):
+        return [custom_get_full_details(value) for key, value in detail.items()][0]
+    return {
+        'message': detail,
+        'code': detail.code
+    }
+
+
 def custom_exception_handler(exc, context):
     """
     Returns the response that should be used for any given exception.
@@ -28,10 +39,7 @@ def custom_exception_handler(exc, context):
         if getattr(exc, 'wait', None):
             headers['Retry-After'] = '%d' % exc.wait
 
-        if isinstance(exc.detail, (list, dict)):
-            data = exc.detail
-        else:
-            data = {'detail': exc.detail}
+        data = custom_get_full_details(exc.detail)
 
         set_rollback()
         return Response(data, status=exc.status_code, headers=headers)

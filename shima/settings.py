@@ -11,11 +11,13 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 import datetime
 import os
+import sys
 import pymysql
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
@@ -26,7 +28,7 @@ SECRET_KEY = '16s7ni2*ld$drw8bicx6w%%jcrmice0*@**7z_j5(pxa)n(4++'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['101.132.71.2', '127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -45,9 +47,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'rest_framework_jwt',
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -153,7 +157,7 @@ AUTHENTICATION_BACKENDS = (
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://localhost:6379/0",
+        "LOCATION": "redis://localhost:6379/5",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "PASSWORD": "test123",
@@ -166,9 +170,20 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     # 每页显示的个数
     'PAGE_SIZE': 10,
+    'EXCEPTION_HANDLER': 'apps.utils.custom_exception.custom_exception_handler'
 }
 
 JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(days=7),  # 也可以设置seconds=20
     'JWT_AUTH_HEADER_PREFIX': 'JWT',                     # 设置Authorization的前缀，如 {Authorization: JWT <your_token>}
 }
+
+appid = '2016101300679868'
+app_private_key_string = b'-----BEGIN PRIVATE KEY-----\nMIIEogIBAAKCAQEAgFP1owmNSZsgeeXgfaFbjZvumRKeyMXqo1fmOzeYqM24IFhbcR7MutTLlRby+3CMERWElNJnT2030gf0YoarULhT8AvVeRjLXcsfaG4tVWo3qxmg9iglfklP6KYXD/twVQQd5oooZb0ZGIWecTeNJ/H8nw6MHQSPVF1JBzz/KBKZig7w30XYvmsOKU/t723Gtckg6NFx7aCpqpsRkznB5IePxpMDwNU5KowW+Olbu6jFTxXKIHeyg5FqwTVgrEo6H1/+1A3uJk8m6EzqvKA0QOltXC7cMxGsZR/UjiNdBFhthdigKAHsICB0wEvzEiecLWmyc6V0Hy47JFTPIUnvuwIDAQABAoIBAC2CmRiK6Kpz816HocesE9XyuPlcWyeE2SO4ppPVsbQb0PLXowZJD/4qPVDQZLe7QFFGulA1FiJa73LzEz5l2Be2Zz44VCqwGl9XC/pzKGykUL3DRwxFTJau1UICtScb2sirvxblZFJAb8f8iyZHty21agvWkuYvmc0nkCCbBzpkbZcfzQJUIOR0KhtY6hjhTl53eQ9GL+LzSQuCa2E9pum26Bu+/y/xOy1HEjn9XMbn5czsmMbi9WLGSTyYLQhV0h4JKbCn5mjJfUgPiWgJ73mme/YjxSgFEbqov48uJWC2D/2XCVqWGsyMfThhsSZaTT55dQ5BdW2fxWZkkmeWq/ECgYEAvQIKByq8UQMfBnhkr+Q8Izs407jCzJZ8ieozLn802bHjsyFULIX0slkt/0Vc3+YhGdpFElHmi9/QET7xjTuPnFco7n42uNwNPP8SSFH9KZBm+ePGZg+98EXjH1qnmke6ZDos8/438OB+InUE0nANT/83oI0mgiA2QVpa2qfqmdUCgYEArdAEVrQmc7NmINqK6lA9WCRMrWywhlrfhofRqTCDcL22MSn1Yq+PfcfCmEBc+wbvC2JI0uiKzbYQp3trnVTPCEWzYIBLk3qXJLvRbe0IxwVMyt/4QMkufIbsO7CAcl2AfNHnjyezwsfkTRXp0UMNoqLU9UmqR61cFi7Cf71/G08CgYBG8vICuLcSDgLiceUR5bHxY7S0PUHafI7pUmG+DYAwS8d2oYcwY2R0YmeS0F3JqmA4jSeqddX+IZjAMImKA5aoEEvMItK119ycTf916FkI9izBlxANldEt1X4pceVCU7STFQd027PyFsMiehzCRc+pfNtLyFBxPlg/dgRu2eOFtQKBgFTYIPYN9GMwJF9PLtZYGsnG1mMlljnPbCNoczDKjK7g/GmdWLo2hq3YcCYP7RNgfBmrfW7usqrd/90xgwOG3ZTlKT2nAr1X7yWwRPgK5+j2rlit4aoGSpng5rnwW5L4D3ten1EjCT3Ag7IZS0yqFaLZJ2kg720Ts8rkQm9GmiBDAoGAcdeK9QFCaV4SNi4FwSSaRTHhaRCX0wi5C1A1IePw4n2rqKd6hnAteVft5+BPb49M9j4sgVY6TxmmMtA7WoHN6DHOEj67cF1IIOICAoYPcoFUjN1kDVtKd6q0hZ07i8NTbQTHyKllSCrDos1Dntc+OwxMK06vclU7guC/nLHMKuU=\n-----END PRIVATE KEY-----'
+alipay_public_key_string = b'-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlamukh+6R0goKs5UJAG7E4ByZ/1Z4uTcvnWYB+FdNjDLyBdYDWzjBYQpqUTGAa2M6Gm2ovIbr9BQI67PCzuUsutUF4L4JvsINwLaOFou8Iy7NnT1745TXgtFYmOjPFICj0++mMIbHAClRLJzwOMOP9eESBRm7pmYxsiEMTR2qlgRaqgTzQKr4zjvEHh/02MkU6HcacjsFv5Gchl866iXPJlkOSG8WeSCTXwi9YzvPaQsfAZP+iwh/lW5EjnTDBZOLeLdA3e4o3s8nj2KfYv92HmS6s1Ob6IvbFZLA3hqBvNCppNWyF1ZcjYQnmDiQlYCTpiJJu6jQhYEDUHUj6IKDwIDAQAB\n-----END PUBLIC KEY-----'
+return_url = 'http://101.132.71.2:8000/alipay/return/'
+
+CORS_ORIGIN_ALLOW_ALL = True
+# CORS_ORIGIN_WHITELIST = (
+#     'http://localhost:9528',
+# )

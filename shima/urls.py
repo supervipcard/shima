@@ -21,14 +21,15 @@ from rest_framework import routers
 import xadmin
 
 from users.views import UserViewSet
-from console.views import ProductViewSet, ProductPackageViewSet, OrderViewSet, OrderGoodsViewSet
+from console.views import ProductViewSet, ProductPackageViewSet, OrderViewSet, OrderGoodsViewSet, ServiceViewSet
 
 router = routers.DefaultRouter()
-router.register(r'users', UserViewSet)
+router.register(r'user', UserViewSet)
 router.register(r'product', ProductViewSet)
 router.register(r'product_package', ProductPackageViewSet)
 router.register(r'order', OrderViewSet, base_name="order")  # 加 base_name 避免因没有 queryset 而报错
 router.register(r'order_goods', OrderGoodsViewSet, base_name="order_goods")
+router.register(r'service', ServiceViewSet, base_name="service")
 
 urlpatterns = [
     path('media/<path:path>', static.serve, {'document_root': settings.MEDIA_ROOT}),

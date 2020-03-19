@@ -35,7 +35,7 @@ class ProductPackage(models.Model):
         (6, "年"),
     )
 
-    product = models.ForeignKey(Product, on_delete=models.PROTECT, verbose_name='产品')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name='产品')
     time_limit = models.SmallIntegerField(verbose_name='套餐期限', choices=time_limit_choices)
     price = models.FloatField(verbose_name='套餐单价')
     default_concurrency = models.IntegerField(verbose_name='默认每秒请求数')
@@ -97,7 +97,7 @@ class OrderGoods(models.Model):
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='用户')
     order = models.ForeignKey(Order, on_delete=models.CASCADE, verbose_name='订单')
-    product_package = models.ForeignKey(ProductPackage, on_delete=models.PROTECT, verbose_name='产品套餐包')
+    product_package = models.ForeignKey(ProductPackage, on_delete=models.CASCADE, verbose_name='产品套餐包')
     period = models.IntegerField(verbose_name='新购周期', default=1)
     number = models.IntegerField(verbose_name='新购数量', default=1)
     additional_concurrency = models.IntegerField(verbose_name='额外每秒请求数', default=0)
@@ -107,7 +107,7 @@ class OrderGoods(models.Model):
         verbose_name_plural = verbose_name
 
     def __str__(self):
-        return self.order
+        return str(self.order)
 
 
 def generate_access_token():
@@ -119,7 +119,7 @@ class Service(models.Model):
     已购买的服务
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='用户')
-    product = models.ForeignKey(Product, on_delete=models.PROTECT, verbose_name='产品')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name='产品')
     access_token = models.CharField(verbose_name='通行秘钥', max_length=64, default=generate_access_token, unique=True)
     concurrency = models.IntegerField(verbose_name='每秒请求数')
     creation_time = models.DateTimeField(verbose_name='创建时间')

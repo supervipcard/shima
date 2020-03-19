@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from django.http import HttpResponse
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -46,7 +47,27 @@ class OrderViewSet(mixins.RetrieveModelMixin,
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(status=status.HTTP_201_CREATED)
+        order_id = serializer.data['order']['order_id']
+        controller.countdown(order_id)
+        return Response({'TradeNo': order_id}, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['post'])
+    def cancel(self, request):
+        trade_list = request.data.get('tradeNo')
+        if isinstance(trade_list, list):
+            for order_id in trade_list:
+                try:
+                    order = Order.objects.get(order_id=order_id)
+                    if order.pay_status == 1:
+                        order.pay_status = 4
+                        order.save()
+                    else:
+                        return Response({'message': '订单不存在或无法作废', 'code': 'not_found'}, status=status.HTTP_404_NOT_FOUND)
+                except Order.DoesNotExist:
+                    return Response({'message': '订单不存在', 'code': 'not_found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response()
+        else:
+            return Response({'message': '参数异常', 'code': 'invalid'}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['post'])
     def delete(self, request):
@@ -55,9 +76,12 @@ class OrderViewSet(mixins.RetrieveModelMixin,
             for order_id in trade_list:
                 try:
                     order = Order.objects.get(order_id=order_id)
-                    order.delete()
+                    if order.pay_status != 2:
+                        order.delete()
+                    else:
+                        return Response({'message': '订单不存在或无法删除', 'code': 'not_found'}, status=status.HTTP_404_NOT_FOUND)
                 except Order.DoesNotExist:
-                    return Response({'message': '订单未找到', 'code': 'not_found'}, status=status.HTTP_404_NOT_FOUND)
+                    return Response({'message': '订单不存在', 'code': 'not_found'}, status=status.HTTP_404_NOT_FOUND)
             return Response()
         else:
             return Response({'message': '参数异常', 'code': 'invalid'}, status=status.HTTP_400_BAD_REQUEST)
@@ -92,9 +116,9 @@ class AliPayAPIView(views.APIView):
         sign = data.pop('sign')
         result = Alipay.verify(data, sign)
         if result:
-            return Response('success')
+            return HttpResponse('success')
         else:
-            return Response('failure')
+            return HttpResponse('failure')
 
     def post(self, request):
         data = request.POST.dict()
@@ -112,6 +136,7 @@ class AliPayAPIView(views.APIView):
             order.pay_status = 2
             order.pay_time = datetime.now()
             order.save()
+            controller.delete(order_id)
 
             user = order.user
             transaction_type = order.transaction_type
@@ -123,6 +148,6 @@ class AliPayAPIView(views.APIView):
                 for i in range(order_goods.number):
                     service = Service(user=user, product=order_goods.product_package.product, concurrency=concurrency, creation_time=creation_time, expiration_time=expiration_time)
                     service.save()
-            return Response('success')
+            return HttpResponse('success')
         else:
-            return Response('failure')
+            return HttpResponse('failure')
