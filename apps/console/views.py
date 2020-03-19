@@ -61,6 +61,7 @@ class OrderViewSet(mixins.RetrieveModelMixin,
                     if order.pay_status == 1:
                         order.pay_status = 4
                         order.save()
+                        controller.delete(order_id)
                     else:
                         return Response({'message': '订单不存在或无法作废', 'code': 'not_found'}, status=status.HTTP_404_NOT_FOUND)
                 except Order.DoesNotExist:
@@ -78,6 +79,7 @@ class OrderViewSet(mixins.RetrieveModelMixin,
                     order = Order.objects.get(order_id=order_id)
                     if order.pay_status != 2:
                         order.delete()
+                        controller.delete(order_id)
                     else:
                         return Response({'message': '订单不存在或无法删除', 'code': 'not_found'}, status=status.HTTP_404_NOT_FOUND)
                 except Order.DoesNotExist:
