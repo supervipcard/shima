@@ -22,6 +22,7 @@ import xadmin
 
 from users.views import UserViewSet
 from console.views import ProductViewSet, ProductPackageViewSet, OrderViewSet, OrderGoodsViewSet, ServiceViewSet
+from utils.upload import UploadAvatar
 
 router = routers.DefaultRouter()
 router.register(r'user', UserViewSet)
@@ -33,6 +34,7 @@ router.register(r'service', ServiceViewSet, base_name="service")
 
 urlpatterns = [
     path('media/<path:path>', static.serve, {'document_root': settings.MEDIA_ROOT}),
+    path('upload/', UploadAvatar.as_view()),
     path('xadmin/', xadmin.site.urls),
     path('api-auth/', include('rest_framework.urls')),  # 增加REST框架的登录和注销视图
     path('', include(router.urls)),

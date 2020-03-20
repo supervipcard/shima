@@ -68,9 +68,11 @@ class UserDetailSerializer(serializers.ModelSerializer):
     """
     用户信息
     """
+    date_joined = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+
     class Meta:
         model = User
-        fields = ("phone", "username", "avatar", "date_joined")
+        fields = ("phone", "username", "qq", "gender", "avatar", "date_joined")
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
@@ -79,7 +81,11 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = User
-        fields = ()
+        fields = ("qq", "gender", "avatar")
+        extra_kwargs = {
+            'qq': {'error_messages': {'max_length': 'QQ号格式不正确'}},
+            'gender': {'error_messages': {'invalid_choice': '性别参数异常'}}
+        }
 
 
 class ChangePasswordSerializer(serializers.Serializer):
