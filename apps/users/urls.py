@@ -20,5 +20,7 @@ from .views import *
 
 urlpatterns = [
     path('smscode/', SMSCode.as_view()),
+    path('captcha/', Captcha.as_view()),
+    path('check_mobile/', CheckMobile.as_view()),
     path('login/', CustomObtainJSONWebToken.as_view()),
 ]

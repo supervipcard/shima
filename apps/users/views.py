@@ -1,5 +1,8 @@
+import uuid
+import base64
 import random
 from datetime import datetime
+from captcha.image import ImageCaptcha
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.db.models import Q
@@ -12,7 +15,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.views import ObtainJSONWebToken, jwt_response_payload_handler, api_settings
 
-from .serializers import SMSCodeSerializer, UserRegSerializer, UserDetailSerializer, UserUpdateSerializer, ChangePasswordSerializer, ResetPasswordSerializer, CustomJSONWebTokenSerializer
+from .serializers import SMSCodeSerializer, UserRegSerializer, UserDetailSerializer, UserUpdateSerializer, ChangePasswordSerializer, ResetPasswordSerializer, CheckMobileSerializer, CustomJSONWebTokenSerializer
 
 User = get_user_model()
 redis_client = get_redis_connection("default")
@@ -78,7 +81,7 @@ class UserViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.Upd
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = User.objects.get(phone=serializer.data['phone'])
-        user.set_password(serializer.data['new_password'])
+        user.set_password(serializer.data['password'])
         user.save()
         return Response()
 
@@ -106,6 +109,34 @@ class SMSCode(views.APIView):
         redis_client.set(key, code_text)
         redis_client.expire(key, 60*5)
         return Response(status=status.HTTP_201_CREATED)
+
+
+class Captcha(views.APIView):
+    number = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u',
+                'v', 'w', 'x', 'y', 'z']
+    ALPHABET = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U',
+                'V', 'W', 'X', 'Y', 'Z']
+
+    def post(self, request):
+        code_list = random.choices(self.number + self.alphabet + self.ALPHABET, k=4)
+        code_text = ''.join(code_list)
+        image = ImageCaptcha()
+        code = image.generate(code_text)
+        code_base64 = base64.b64encode(code.read())
+        code_uuid = str(uuid.uuid4())
+
+        key = 'captcha:{}'.format(code_uuid)
+        redis_client.set(key, code_text)
+        redis_client.expire(key, 60)
+        return Response({'uuid': code_uuid, 'code_base64': code_base64}, status=status.HTTP_201_CREATED)
+
+
+class CheckMobile(views.APIView):
+    def post(self, request):
+        serializer = CheckMobileSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return Response()
 
 
 class CustomObtainJSONWebToken(ObtainJSONWebToken):

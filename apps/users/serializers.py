@@ -123,13 +123,13 @@ class ResetPasswordSerializer(serializers.Serializer):
                                       'required': '手机号码不能为空',
                                       'blank': '手机号码不能为空',
                                   })
-    new_password = serializers.CharField(style={'input_type': 'password'}, label='新密码', min_length=6, max_length=32,
-                                         error_messages={
-                                             'required': '新密码不能为空',
-                                             'blank': '新密码不能为空',
-                                             'max_length': '新密码格式不正确',
-                                             'min_length': '新密码格式不正确'
-                                         })
+    password = serializers.CharField(style={'input_type': 'password'}, label='新密码', min_length=6, max_length=32,
+                                     error_messages={
+                                         'required': '密码不能为空',
+                                         'blank': '密码不能为空',
+                                         'max_length': '密码格式不正确',
+                                         'min_length': '密码格式不正确'
+                                     })
     sms_code = serializers.CharField(label='短信验证码', write_only=True,
                                      error_messages={
                                          'required': '短信验证码不能为空',
@@ -170,8 +170,21 @@ class CustomJSONWebTokenSerializer(JSONWebTokenSerializer):
                                                             'max_length': '密码格式不正确',
                                                             'min_length': '密码格式不正确'
                                                         })
+        self.fields['code'] = serializers.CharField(label='验证码', write_only=True,
+                                                    error_messages={
+                                                        'required': '验证码不能为空',
+                                                        'blank': '验证码不能为空'
+                                                    })
+        self.fields['uuid'] = serializers.CharField(label='验证码ID', write_only=True, default='')
 
     def validate(self, attrs):
+        key = 'captcha:{}'.format(attrs['uuid'])
+        val = redis_client.get(key)
+        if not val or val.decode('utf8').lower() != attrs['code'].lower():
+            raise serializers.ValidationError("验证码错误")
+        del attrs['code']
+        del attrs['uuid']
+
         credentials = {
             self.username_field: attrs.get(self.username_field),
             'password': attrs.get('password')
@@ -192,3 +205,31 @@ class CustomJSONWebTokenSerializer(JSONWebTokenSerializer):
         else:
             msg = '用户名或密码错误'
             raise serializers.ValidationError(msg)
+
+
+class CheckMobileSerializer(serializers.Serializer):
+    phone = serializers.CharField(label='手机号码', validators=[RegexValidator(regex='^\d{11}$', message='手机号码格式不正确')],
+                                  error_messages={
+                                      'required': '手机号码不能为空',
+                                      'blank': '手机号码不能为空',
+                                  })
+    code = serializers.CharField(label='验证码', write_only=True,
+                                 error_messages={
+                                     'required': '验证码不能为空',
+                                     'blank': '验证码不能为空'
+                                 })
+    uuid = serializers.CharField(label='验证码ID', write_only=True, default='')
+
+    def validate(self, attrs):
+        key = 'captcha:{}'.format(attrs['uuid'])
+        val = redis_client.get(key)
+        if not val or val.decode('utf8').lower() != attrs['code'].lower():
+            raise serializers.ValidationError("验证码错误")
+        del attrs['code']
+        del attrs['uuid']
+
+        try:
+            User.objects.get(phone=attrs['phone'])
+        except User.DoesNotExist:
+            raise serializers.ValidationError("手机号码未注册")
+        return attrs
