@@ -1,4 +1,4 @@
-bind = 'localhost:11317'
+bind = '0.0.0.0:11317'
 backlog = 2048
 
 workers = 1
