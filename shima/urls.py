@@ -33,6 +33,7 @@ router.register(r'order_goods', OrderGoodsViewSet, base_name="order_goods")
 router.register(r'service', ServiceViewSet, base_name="service")
 
 urlpatterns = [
+    path('static/<path:path>', static.serve, {'document_root': settings.STATIC_ROOT}),
     path('media/<path:path>', static.serve, {'document_root': settings.MEDIA_ROOT}),
     path('upload/', UploadAvatar.as_view()),
     path('xadmin/', xadmin.site.urls),
