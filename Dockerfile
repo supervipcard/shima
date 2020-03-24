@@ -5,4 +5,3 @@ EXPOSE 11317
 RUN pip3 install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
 RUN pip3 install gunicorn -i https://pypi.tuna.tsinghua.edu.cn/simple/
 ENV TZ=Asia/Shanghai
-CMD python manage.py makemigrations && python manage.py migrate && gunicorn --config gunicorn_config.py shima.wsgi:application

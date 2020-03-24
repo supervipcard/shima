@@ -28,7 +28,7 @@ SECRET_KEY = '16s7ni2*ld$drw8bicx6w%%jcrmice0*@**7z_j5(pxa)n(4++'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['101.132.71.2', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = [os.environ.get('SERVER_HOST', ''), '127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -97,12 +97,12 @@ pymysql.install_as_MySQLdb()
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'vue_shima',
-        'USER': 'xiangchen',
-        'PASSWORD': 'Pl1996317',
-        'HOST': '172.19.121.159',
-        'PORT': '3306',
-        'CHARSET': 'utf8mb4'
+        'NAME': os.environ.get('MYSQL_DB', 'vue_shima'),
+        'USER': os.environ.get('MYSQL_USER', ''),
+        'PASSWORD': os.environ.get('MYSQL_PASSWORD', ''),
+        'HOST': os.environ.get('MYSQL_HOST', ''),
+        'PORT': os.environ.get('MYSQL_PORT', 3306),
+        'CHARSET': os.environ.get('MYSQL_CHARSET', 'utf8mb4')
     }
 }
 
@@ -158,10 +158,14 @@ AUTHENTICATION_BACKENDS = (
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://172.19.121.159:6379/5",
+        "LOCATION": 'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'.format(
+            REDIS_HOST=os.environ.get('REDIS_HOST', ''),
+            REDIS_PORT=os.environ.get('REDIS_PORT', 6379),
+            REDIS_DB=os.environ.get('REDIS_DB', 5)
+        ),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "PASSWORD": "pl1996317",
+            "PASSWORD": os.environ.get('REDIS_PASSWORD', ''),
         }
     }
 }
@@ -182,7 +186,7 @@ JWT_AUTH = {
 appid = '2016101300679868'
 app_private_key_string = b'-----BEGIN PRIVATE KEY-----\nMIIEogIBAAKCAQEAgFP1owmNSZsgeeXgfaFbjZvumRKeyMXqo1fmOzeYqM24IFhbcR7MutTLlRby+3CMERWElNJnT2030gf0YoarULhT8AvVeRjLXcsfaG4tVWo3qxmg9iglfklP6KYXD/twVQQd5oooZb0ZGIWecTeNJ/H8nw6MHQSPVF1JBzz/KBKZig7w30XYvmsOKU/t723Gtckg6NFx7aCpqpsRkznB5IePxpMDwNU5KowW+Olbu6jFTxXKIHeyg5FqwTVgrEo6H1/+1A3uJk8m6EzqvKA0QOltXC7cMxGsZR/UjiNdBFhthdigKAHsICB0wEvzEiecLWmyc6V0Hy47JFTPIUnvuwIDAQABAoIBAC2CmRiK6Kpz816HocesE9XyuPlcWyeE2SO4ppPVsbQb0PLXowZJD/4qPVDQZLe7QFFGulA1FiJa73LzEz5l2Be2Zz44VCqwGl9XC/pzKGykUL3DRwxFTJau1UICtScb2sirvxblZFJAb8f8iyZHty21agvWkuYvmc0nkCCbBzpkbZcfzQJUIOR0KhtY6hjhTl53eQ9GL+LzSQuCa2E9pum26Bu+/y/xOy1HEjn9XMbn5czsmMbi9WLGSTyYLQhV0h4JKbCn5mjJfUgPiWgJ73mme/YjxSgFEbqov48uJWC2D/2XCVqWGsyMfThhsSZaTT55dQ5BdW2fxWZkkmeWq/ECgYEAvQIKByq8UQMfBnhkr+Q8Izs407jCzJZ8ieozLn802bHjsyFULIX0slkt/0Vc3+YhGdpFElHmi9/QET7xjTuPnFco7n42uNwNPP8SSFH9KZBm+ePGZg+98EXjH1qnmke6ZDos8/438OB+InUE0nANT/83oI0mgiA2QVpa2qfqmdUCgYEArdAEVrQmc7NmINqK6lA9WCRMrWywhlrfhofRqTCDcL22MSn1Yq+PfcfCmEBc+wbvC2JI0uiKzbYQp3trnVTPCEWzYIBLk3qXJLvRbe0IxwVMyt/4QMkufIbsO7CAcl2AfNHnjyezwsfkTRXp0UMNoqLU9UmqR61cFi7Cf71/G08CgYBG8vICuLcSDgLiceUR5bHxY7S0PUHafI7pUmG+DYAwS8d2oYcwY2R0YmeS0F3JqmA4jSeqddX+IZjAMImKA5aoEEvMItK119ycTf916FkI9izBlxANldEt1X4pceVCU7STFQd027PyFsMiehzCRc+pfNtLyFBxPlg/dgRu2eOFtQKBgFTYIPYN9GMwJF9PLtZYGsnG1mMlljnPbCNoczDKjK7g/GmdWLo2hq3YcCYP7RNgfBmrfW7usqrd/90xgwOG3ZTlKT2nAr1X7yWwRPgK5+j2rlit4aoGSpng5rnwW5L4D3ten1EjCT3Ag7IZS0yqFaLZJ2kg720Ts8rkQm9GmiBDAoGAcdeK9QFCaV4SNi4FwSSaRTHhaRCX0wi5C1A1IePw4n2rqKd6hnAteVft5+BPb49M9j4sgVY6TxmmMtA7WoHN6DHOEj67cF1IIOICAoYPcoFUjN1kDVtKd6q0hZ07i8NTbQTHyKllSCrDos1Dntc+OwxMK06vclU7guC/nLHMKuU=\n-----END PRIVATE KEY-----'
 alipay_public_key_string = b'-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlamukh+6R0goKs5UJAG7E4ByZ/1Z4uTcvnWYB+FdNjDLyBdYDWzjBYQpqUTGAa2M6Gm2ovIbr9BQI67PCzuUsutUF4L4JvsINwLaOFou8Iy7NnT1745TXgtFYmOjPFICj0++mMIbHAClRLJzwOMOP9eESBRm7pmYxsiEMTR2qlgRaqgTzQKr4zjvEHh/02MkU6HcacjsFv5Gchl866iXPJlkOSG8WeSCTXwi9YzvPaQsfAZP+iwh/lW5EjnTDBZOLeLdA3e4o3s8nj2KfYv92HmS6s1Ob6IvbFZLA3hqBvNCppNWyF1ZcjYQnmDiQlYCTpiJJu6jQhYEDUHUj6IKDwIDAQAB\n-----END PUBLIC KEY-----'
-return_url = 'http://101.132.71.2:11317/alipay/return/'
+return_url = 'http://{SERVER_HOST}:{SERVER_PORT}/alipay/return/'.format(SERVER_HOST=os.environ.get('SERVER_HOST', ''), SERVER_PORT=os.environ.get('SERVER_PORT', ''))
 
 CORS_ORIGIN_ALLOW_ALL = True
 # CORS_ORIGIN_WHITELIST = (

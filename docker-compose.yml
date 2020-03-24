@@ -1,0 +1,15 @@
+version: '3.7'
+
+services:
+  shima_backend:
+    container_name: shima_backend
+    build: .
+    image: shima_backend:latest
+    restart: always
+    volumes:
+      - .:/code/.
+    ports:
+      - 11317:11317
+    env_file:
+      - ./.env
+    command: bash start.sh
