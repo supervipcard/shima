@@ -35,10 +35,10 @@ router.register(r'service', ServiceViewSet, base_name="service")
 urlpatterns = [
     path('static/<path:path>', static.serve, {'document_root': settings.STATIC_ROOT}),
     path('media/<path:path>', static.serve, {'document_root': settings.MEDIA_ROOT}),
-    path('upload/', UploadAvatar.as_view()),
+    # path('upload/', UploadAvatar.as_view()),
     path('xadmin/', xadmin.site.urls),
     path('api-auth/', include('rest_framework.urls')),  # 增加REST框架的登录和注销视图
-    path('', include(router.urls)),
-    path('', include('users.urls')),
-    path('', include('console.urls')),
+    path('api/', include(router.urls)),
+    path('api/', include('users.urls')),
+    path('api/', include('console.urls')),
 ]
