@@ -1,7 +1,6 @@
 import uuid
 import base64
 import random
-import logging
 from datetime import datetime
 from captcha.image import ImageCaptcha
 from django.contrib.auth import get_user_model
@@ -20,7 +19,6 @@ from .serializers import SMSCodeSerializer, UserRegSerializer, UserDetailSeriali
 
 User = get_user_model()
 redis_client = get_redis_connection("default")
-logger = logging.getLogger(__name__)
 
 
 class CustomBackend(ModelBackend):
@@ -121,9 +119,7 @@ class Captcha(views.APIView):
                 'V', 'W', 'X', 'Y', 'Z']
 
     def post(self, request):
-        print('1')
-        logging.info('2')
-        logging.error('3')
+        1/0
         code_list = random.choices(self.number + self.alphabet + self.ALPHABET, k=4)
         code_text = ''.join(code_list)
         image = ImageCaptcha()
