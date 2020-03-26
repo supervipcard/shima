@@ -30,7 +30,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['101.132.71.2', '127.0.0.1', 'localhost']
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -82,7 +81,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'shima.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
@@ -106,7 +104,6 @@ DATABASES = {
     }
 }
 
-
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
 
@@ -125,11 +122,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
-LANGUAGE_CODE = 'zh-hans'    # 中文zh-hans
+LANGUAGE_CODE = 'zh-hans'  # 中文zh-hans
 
 TIME_ZONE = 'Asia/Shanghai'
 
@@ -138,7 +134,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = False
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
@@ -175,7 +170,7 @@ REST_FRAMEWORK = {
 
 JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(days=7),  # 也可以设置seconds=20
-    'JWT_AUTH_HEADER_PREFIX': 'JWT',                     # 设置Authorization的前缀，如 {Authorization: JWT <your_token>}
+    'JWT_AUTH_HEADER_PREFIX': 'JWT',  # 设置Authorization的前缀，如 {Authorization: JWT <your_token>}
 }
 
 appid = '2016101300679868'
