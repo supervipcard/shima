@@ -20,6 +20,9 @@ from .serializers import SMSCodeSerializer, UserRegSerializer, UserDetailSeriali
 User = get_user_model()
 redis_client = get_redis_connection("default")
 
+import logging
+logger = logging.getLogger('django')
+
 
 class CustomBackend(ModelBackend):
     """
@@ -119,6 +122,9 @@ class Captcha(views.APIView):
                 'V', 'W', 'X', 'Y', 'Z']
 
     def post(self, request):
+        print('1')
+        logger.info('2')
+        logger.error('3')
         1/0
         code_list = random.choices(self.number + self.alphabet + self.ALPHABET, k=4)
         code_text = ''.join(code_list)

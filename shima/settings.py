@@ -188,3 +188,32 @@ CORS_ORIGIN_ALLOW_ALL = True
 # CORS_ORIGIN_WHITELIST = (
 #     'http://localhost:9528',
 # )
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'default': {
+            'format': '%(asctime)s [%(name)s] %(levelname)s: %(message)s',
+        },
+    },
+    'handlers': {
+        'console': {
+            'formatter': 'default',
+            'class': 'logging.StreamHandler',
+        },
+        'file': {
+            'formatter': 'default',
+            'class': 'logging.FileHandler',
+            'filename': 'app.log',
+            'encoding': 'utf8',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
