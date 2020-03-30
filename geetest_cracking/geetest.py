@@ -105,6 +105,7 @@ class GeetestCrack:
                         validate = self.api_ajax_click(coord, api_get_result['data'])
                         if validate:
                             return {'code': 0, 'message': '识别成功', 'data': {'validate': validate, 'challenge': self.challenge}}
+                        break
                     return {'code': 1014, 'message': '识别失败'}
                 else:
                     return {'code': 1020, 'message': '目前暂不支持{}类型验证码'.format(pic_type)}
@@ -282,49 +283,3 @@ class GeetestCrack:
         result = json.loads(response.text[22: -1])['data']
         if result.get('validate'):
             return result['validate']
-
-
-def bilibili_register():
-    url = 'https://passport.bilibili.com/web/captcha/combine?plat=11'.format(int(time.time() * 1000))
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36',
-    }
-    response = requests.get(url=url, headers=headers)
-    print(response.text)
-    data = json.loads(response.text)['data']['result']
-    return data['challenge'], data['gt'], data['key']
-
-
-def tyc_register():
-    url = 'https://www.tianyancha.com/verify/geetest.xhtml'
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36',
-        'Content-Type': 'application/json; charset=UTF-8',
-    }
-    response = requests.post(url=url, headers=headers)
-    print(response.text)
-    data = json.loads(response.text)['data']
-    return data['challenge'], data['gt']
-
-
-def general_register():
-    url = 'https://www.geetest.com/demo/gt/register-slide-official?t={}'.format(int(time.time() * 1000))
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36',
-    }
-    response = requests.get(url=url, headers=headers)
-    print(response.text)
-    data = json.loads(response.text)
-    return data['challenge'], data['gt']
-
-
-def main():
-    challenge, gt, key = bilibili_register()
-    # challenge, gt = tyc_register()
-    # challenge, gt = general_register()
-    # challenge, gt = None, '9e296fca9afdfa4703b9f4bee02820af'
-    print(challenge, gt)
-
-
-if __name__ == '__main__':
-    main()
