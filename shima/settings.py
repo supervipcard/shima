@@ -28,7 +28,7 @@ SECRET_KEY = '16s7ni2*ld$drw8bicx6w%%jcrmice0*@**7z_j5(pxa)n(4++'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = [os.environ.get('SERVER_HOST', ''), '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.wsxiangchen.com']
 
 # Application definition
 
