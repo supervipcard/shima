@@ -20,5 +20,5 @@ from .views import *
 
 urlpatterns = [
     path('alipay/return/', AliPayAPIView.as_view(), name='alipay_return'),
-    path('api/gcservice/', GeetestAPIView.as_view(), name='gcservice'),
+    path('gcservice/', GeetestAPIView.as_view(), name='gcservice'),
 ]
