@@ -7,6 +7,7 @@ from rest_framework import views, generics, mixins, viewsets, filters, status, p
 from rest_framework.pagination import PageNumberPagination
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
+from geetest_cracking.geetest import GeetestCrack
 from .models import *
 from .serializers import ProductSerializer, ProductPackageSerializer, OrderSerializer, OrderPurchaseSerializer, OrderGoodsSerializer, ServiceSerializer
 from utils.alipay_ import Alipay
@@ -153,3 +154,26 @@ class AliPayAPIView(views.APIView):
             return HttpResponse('success')
         else:
             return HttpResponse('failure')
+
+
+class GeetestAPIView(views.APIView):
+    def post(self, request):
+        data = request.POST.dict()
+        access_token = data.get('access_token')
+        gt = data.get('gt')
+        challenge = data.get('challenge')
+        referer = data.get('referer')
+
+        if access_token and challenge and referer:
+            try:
+                channel = Service.objects.get(access_token=access_token)
+            except Service.DoesNotExist:
+                return Response({'message': 'access_token认证失败', 'code': '1002'})
+
+            if channel.expiration_time < datetime.now():
+                return Response({'message': '服务已过期', 'code': '1003'})
+
+            result = GeetestCrack(challenge, gt, referer).start()
+            return Response(result)
+        else:
+            return Response({'message': '请求参数异常', 'code': '1001'})
