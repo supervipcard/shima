@@ -9,7 +9,7 @@ services:
     volumes:
       - .:/code/.
     ports:
-      - 172.19.121.159:11317:11317
+      - 11317:11317
     env_file:
       - ./.env
     command: bash start.sh
