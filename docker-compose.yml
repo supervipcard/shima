@@ -6,8 +6,6 @@ services:
     build: .
     image: shima_backend:latest
     restart: always
-    volumes:
-      - .:/code/.
     ports:
       - 11317:11317
     env_file:
