@@ -49,28 +49,33 @@ class UnKnownException(Exception):
 class GeetestCrack:
     yolo = YOLO()
 
-    with open('geetest_cracking/sense.js', 'r', encoding='utf-8') as f:
-        source_sense = f.read()
-
-    with open('geetest_cracking/fullpage.js', 'r', encoding='utf-8') as f:
-        source_fullpage = f.read()
-
-    with open('geetest_cracking/fullpage2.js', 'r', encoding='utf-8') as f:
-        source_fullpage2 = f.read()
-
-    with open('geetest_cracking/slide.js', 'r', encoding='utf-8') as f:
-        source_slide = f.read()
-
-    with open('geetest_cracking/click.js', 'r', encoding='utf-8') as f:
-        source_click = f.read()
-
     def __init__(self, challenge, gt, referer):
         self.challenge = challenge
         self.gt = gt
         self.session = requests.Session()
         self.session.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36'
         self.session.headers['Referer'] = referer
-        self.node = execjs.get('Node')
+        self.node = execjs.get()
+
+        with open('geetest_cracking/sense.js', 'r', encoding='utf8') as f:
+            source_sense = f.read()
+        self.context_sense = self.node.compile(source_sense)
+
+        with open('geetest_cracking/fullpage.js', 'r', encoding='utf8') as f:
+            source_fullpage = f.read()
+        self.context_fullpage = self.node.compile(source_fullpage)
+
+        with open('geetest_cracking/fullpage2.js', 'r', encoding='utf8') as f:
+            source_fullpage2 = f.read()
+        self.context_fullpage2 = self.node.compile(source_fullpage2)
+
+        with open('geetest_cracking/slide.js', 'r', encoding='utf8') as f:
+            source_slide = f.read()
+        self.context_slide = self.node.compile(source_slide)
+
+        with open('geetest_cracking/click.js', 'r', encoding='utf8') as f:
+            source_click = f.read()
+        self.context_click = self.node.compile(source_click)
 
     def start(self):
         try:
@@ -124,8 +129,7 @@ class GeetestCrack:
 
     def gt_judgement(self):
         """若challenge不是由目标网站生成，则是由极验通过目标网站的gt值生成（例如拉勾、斗鱼）"""
-        context = self.node.compile(self.source_sense)
-        data = context.call('outside_link', self.gt)
+        data = self.context_sense.call('outside_link', self.gt)
         url = 'https://api.geetest.com/gt_judgement?pt=0&gt={}'.format(self.gt)
         response = requests.post(url=url, data=data)
         result = json.loads(response.text)
@@ -151,8 +155,7 @@ class GeetestCrack:
 
     def get_and_ajax(self):
         """点击验证按钮"""
-        context = self.node.compile(self.source_fullpage)
-        E, w_get = context.call('outside_link', self.challenge, self.gt)
+        E, w_get = self.context_fullpage.call('outside_link', self.challenge, self.gt)
 
         get_url = 'https://api.geetest.com/get.php?gt={gt}&challenge={challenge}&lang={lang}&w={w}&callback=geetest_{t}'.format(
             gt=self.gt, challenge=self.challenge, lang='zh-cn', w=w_get, t=int(time.time() * 1000))
@@ -166,8 +169,7 @@ class GeetestCrack:
             else:
                 raise UnKnownException(result)
 
-        context = self.node.compile(self.source_fullpage2)
-        w_ajax = context.call('outside_link', self.challenge, self.gt, E, result['data'])
+        w_ajax = self.context_fullpage2.call('outside_link', self.challenge, self.gt, E, result['data'])
 
         ajax_url = 'https://api.geetest.com/ajax.php?gt={gt}&challenge={challenge}&lang={lang}&w={w}&callback=geetest_{t}'.format(
             gt=self.gt, challenge=self.challenge, lang='zh-cn', w=w_ajax, t=int(time.time() * 1000))
@@ -206,9 +208,8 @@ class GeetestCrack:
 
     def api_ajax(self, x, data):
         """提交验证"""
-        context = self.node.compile(self.source_slide)
         points = self.simulate(x)
-        w = context.call('outside_link', x, points, data)
+        w = self.context_slide.call('outside_link', x, points, data)
 
         url = 'https://api.geetest.com/ajax.php?gt={gt}&challenge={challenge}&lang={lang}&w={w}&callback=geetest_{t}'.format(
             gt=self.gt, challenge=self.challenge, lang='zh-cn', w=w, t=int(time.time() * 1000))
@@ -219,8 +220,7 @@ class GeetestCrack:
 
     def api_ajax_click(self, points, data):
         """提交验证"""
-        getpass = self.node.compile(self.source_click)
-        w = getpass.call('outside_link', self.challenge, self.gt, points, data)
+        w = self.context_click.call('outside_link', self.challenge, self.gt, points, data)
 
         url = 'https://api.geetest.com/ajax.php?gt={gt}&challenge={challenge}&lang={lang}&w={w}&callback=geetest_{t}'.format(
             gt=self.gt, challenge=self.challenge, lang='zh-cn', w=w, t=int(time.time() * 1000))
