@@ -100,7 +100,6 @@ class GeetestCrack:
                     coord = self.get_coord(api_get_result['data']['pic'])
                     time.sleep(1)
                     for points in itertools.permutations(coord, len(coord)):
-                        # print(points)
                         coord = ','.join([str(i[0]) + '_' + str(i[1]) for i in points])
                         validate = self.api_ajax_click(coord, api_get_result['data'])
                         if validate:
@@ -214,9 +213,29 @@ class GeetestCrack:
         url = 'https://api.geetest.com/ajax.php?gt={gt}&challenge={challenge}&lang={lang}&w={w}&callback=geetest_{t}'.format(
             gt=self.gt, challenge=self.challenge, lang='zh-cn', w=w, t=int(time.time() * 1000))
         response = self.session.get(url=url)
-        result = json.loads(response.text[22: -1])
+        result = json.loads(response.text[22: -1]) if response.text.startswith('geetest_') else json.loads(response.text)
         if result.get('validate'):
             return result['validate']
+
+    def api_ajax_click(self, points, data):
+        """提交验证"""
+        getpass = self.node.compile(self.source_click)
+        w = getpass.call('outside_link', self.challenge, self.gt, points, data)
+
+        url = 'https://api.geetest.com/ajax.php?gt={gt}&challenge={challenge}&lang={lang}&w={w}&callback=geetest_{t}'.format(
+            gt=self.gt, challenge=self.challenge, lang='zh-cn', w=w, t=int(time.time() * 1000))
+        response = self.session.get(url=url)
+        result = json.loads(response.text[22: -1])['data'] if response.text.startswith('geetest_') else json.loads(response.text)
+        if result.get('validate'):
+            return result['validate']
+
+    def refresh(self):
+        """刷新"""
+        url = 'https://api.geetest.com/refresh.php?gt={gt}&challenge={challenge}&lang={lang}&type={type}&callback=geetest_{t}'.format(
+            gt=self.gt, challenge=self.challenge, lang='zh-cn', type='', t=int(time.time() * 1000))
+        response = self.session.get(url=url)
+        result = json.loads(response.text[22: -1]) if response.text.startswith('geetest_') else json.loads(response.text)
+        return result
 
     def get_pos(self, bg, fullbg):
         """获取图片缺口坐标"""
@@ -255,7 +274,7 @@ class GeetestCrack:
         return points
 
     def get_coord(self, bg):
-        """获取图片缺口坐标"""
+        """获取图片汉字坐标"""
         bg_url = 'https://static.geetest.com/' + bg
         bg_response = self.session.get(url=bg_url)
         bg_image = Image.open(BytesIO(bg_response.content))
@@ -267,19 +286,7 @@ class GeetestCrack:
 
         lis = list()
         for box in out_boxes:
-            x = int((box[1] + box[3])/2/344*10000)
-            y = int((box[0] + box[2])/2/344*10000)
+            x = int((box[1] + box[3]) / 2 / 344 * 10000)
+            y = int((box[0] + box[2]) / 2 / 344 * 10000)
             lis.append((x, y))
         return lis
-
-    def api_ajax_click(self, points, data):
-        """提交验证"""
-        getpass = self.node.compile(self.source_click)
-        w = getpass.call('outside_link', self.challenge, self.gt, points, data)
-
-        url = 'https://api.geetest.com/ajax.php?gt={gt}&challenge={challenge}&lang={lang}&w={w}&callback=geetest_{t}'.format(
-            gt=self.gt, challenge=self.challenge, lang='zh-cn', w=w, t=int(time.time() * 1000))
-        response = self.session.get(url=url)
-        result = json.loads(response.text[22: -1])['data']
-        if result.get('validate'):
-            return result['validate']
